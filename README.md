@@ -66,6 +66,11 @@ Claude 執行 Skill 後會觀察結果（例如指令是否噴錯），如果失
 *   **核心功能**：支援 Obsidian 特色的雙向連結（Wikilinks）、提示框（Callouts）、內容嵌入（Embeds）與 Properties 屬性管理。
 *   **使用方式**：在處理 `.md` 檔案或處理 Obsidian 特有功能時自動調用。
 
+### 4. [Obsidian Bases](./obsidian-bases/README.md)
+*   **角色場景**：Obsidian 資料庫視圖專家。
+*   **核心功能**：建立與管理 `.base` 檔案，支援表格、卡片等動態視圖、巢狀篩選器與強大的公式系統。
+*   **使用方式**：處理 `.base` 檔案或涉及資料庫視圖、篩選器、公式計算時觸發。
+
 ---
 
 ## 安裝目錄
