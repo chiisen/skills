@@ -1,0 +1,22 @@
+{
+    "skill_name": "bodi-manga-master",
+    "version": "1.0.0",
+    "description": "自動化八格漫畫生成技能",
+    "entry_point": "SKILL.md",
+    "tools": [
+        {
+            "name": "image_generation",
+            "enabled": true,
+            "auto_approval": true,
+            "parameters": {
+                "quality": "hd",
+                "style": "vivid"
+            }
+        }
+    ],
+    "runtime_settings": {
+        "strict_mode": true,
+        "response_format": "visual_only",
+        "timeout": 60
+    }
+}
