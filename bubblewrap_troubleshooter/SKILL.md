@@ -1,67 +1,51 @@
 ---
 name: bubblewrap_troubleshooter
-description: "Diagnose and fix common Bubblewrap/Gradle build errors, specifically JVM Header memory issues and JAVA_HOME misconfigurations."
+description: Automatically handles common Bubblewrap build issues like connection errors and JVM memory limits.
 ---
 
-# Bubblewrap Build Troubleshooter
+# Bubblewrap Troubleshooter
 
-This skill helps resolve failures when running `bubblewrap build`, particularly errors related to JVM memory allocation (`Could not reserve enough space`) or `JAVA_HOME` configuration.
+這項技能旨在解決 Bubblewrap 建置過程中常見的問題，特別是記憶體不足與連線問題。
 
-## Common Error Symptoms
+## 功能
 
-1.  **JVM Heap Size Error**:
-    ```
-    Error occurred during initialization of VM
-    Could not reserve enough space for 1572864KB object heap
-    ```
-2.  **Daemon Start Failure**:
-    ```
-    org.gradle.api.GradleException: Unable to start the daemon process.
-    ```
-3.  **Invalid JAVA_HOME**:
-    ```
-    ERROR: JAVA_HOME is set to an invalid directory: ...
-    ```
+1.  **自動化建置工具**：提供封裝好的 PowerShell 腳本，自動執行更新、修正配置並建置。
+2.  **記憶體修正**：自動將 `gradle.properties` 中的 JVM 記憶體設定從預設的 `1536m` 降低至 `512m`。
 
-## Diagnosis Process
+## 使用方法
 
-1.  **Check `JAVA_HOME`**:
-    - Verify if the system `JAVA_HOME` points to a valid JDK.
-    - Bubblewrap typically installs its own JDK in `~/.bubblewrap/jdk/`. It is often safer to use this internal JDK to avoid version conflicts (e.g., Gradle 8.x often requires JDK 17).
+### 自動化建置 (推薦)
 
-2.  **Check Memory Settings**:
-    - The default Gradle daemon often requests 1.5GB+ (`-Xmx1536m`). On systems with limited free RAM (or specific Windows configurations), this fails.
-    - Limiting the heap size to 1024MB (`-Xmx1024m`) usually resolves this without impacting build performance for this size of project.
-
-## Resolution Steps (PowerShell)
-
-Run the following commands in the terminal before attempting `bubblewrap build` again.
-
-### 1. Identify Bubblewrap JDK Path
-Find the valid JDK path. Usually:
-`C:\Users\<User>\.bubblewrap\jdk\jdk-17.x.x`
-
-### 2. Configure Environment Variables
-Set the environment variables **temporarily** for the current session:
+使用此 Skill 提供的腳本來進行建置。假設您在專案根目錄：
 
 ```powershell
-# 1. Set JAVA_HOME to the Bubblewrap internal JDK (adjust path version if needed)
-# Use Get-ChildItem to find the exact version folder if unsure
-$jdkPath = Get-ChildItem "C:\Users\$env:USERNAME\.bubblewrap\jdk\jdk-*" | Select-Object -First 1 -ExpandProperty FullName
-$env:JAVA_HOME = $jdkPath
-
-# 2. Limit Gradle Memory
-$env:GRADLE_OPTS = "-Dorg.gradle.jvmargs=-Xmx1024m"
-
-# 3. Verify
-Write-Host "Java Home Set To: $env:JAVA_HOME"
-Write-Host "Gradle Opts Set To: $env:GRADLE_OPTS"
+# 執行 skills 內的建置腳本，並指定 android 專案路徑
+skills/bubblewrap_troubleshooter/scripts/build.ps1 -AppDirectory android-app
 ```
 
-### 3. Run Build
+如果您已經在 `android-app` 目錄內：
+
 ```powershell
-bubblewrap build
+../skills/bubblewrap_troubleshooter/scripts/build.ps1
 ```
 
-## Permanent Fix (Optional)
-If this happens frequently, add the environment variables to the system permanently or update `bubblewrap` configuration to force these flags.
+此腳本會依序執行：
+1. `bubblewrap update` (更新專案)
+2. 修改 `gradle.properties` (修正記憶體)
+3. `bubblewrap build` (建置 APK)
+
+### 手動排解
+
+若需手動操作，核心修正步驟如下：
+
+1. 修改 `android-app/gradle.properties`：
+   ```properties
+   org.gradle.jvmargs=-Xmx512m
+   ```
+
+2. 若遇到 Keystore 錯誤，需刪除並重建：
+   ```powershell
+   Remove-Item android.keystore
+   # 確保已在 8088 埠啟動伺服器 (例如使用 python -m http.server 8088)
+   bubblewrap init --manifest http://localhost:8088/manifest.json
+   ```
