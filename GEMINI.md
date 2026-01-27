@@ -29,3 +29,16 @@
 - **Scope 範圍**：說明影響範圍。
 - **Subject 主旨**：使用 **繁體中文**，簡短描述變更。
 - **Body 內容**：詳細描述變更內容、原因及背景，使用 **繁體中文**。
+
+### 技術偏好 (Tech Preferences)
+依據使用者慣用技術堆疊，本專案使用以下元件版本與配置。即使無 Docker 設定檔，所有代碼生成與問題回答皆應優先考量這些特性：
+
+| 元件 (Service) | 版本 (Version) | 端口 (Port) | 備註 (Notes) |
+| :--- | :--- | :--- | :--- |
+| **App Server** | `Dockerfile` | `80` | PHP/Nginx, Env: `./code/.env` |
+| **Grafana** | `v12.1` | `3000` | Provisioning: `./grafana/provisioning` |
+| **Loki** | `v3.5.5` | `3100` | Log Aggregation |
+| **Promtail** | `v3.5` | - | Log Shipper |
+| **Prometheus** | `v3.5.0` | `9090` | Metrics Database |
+| **Node Exporter** | `v1.9.1` | `9100` | System Metrics |
+| **cAdvisor** | `v0.49.1` | `8080` | Container Metrics (Privileged) |

@@ -81,6 +81,11 @@ Claude 執行 Skill 後會觀察結果（例如指令是否噴錯），如果失
 *   **核心功能**：針對 Android 封裝工具執行 `bubblewrap build` 時常見的 JVM 記憶體不足與 JDK 路徑錯誤提供診斷與標準修復流程。
 *   **使用方式**：當執行 Bubblewrap 建置失敗，出現 Heap Space 或 JAVA_HOME 錯誤時參考使用。
 
+### 7. [OS Detector](./os-detector/SKILL.md)
+*   **角色場景**：跨平台環境判斷助手。
+*   **核心功能**：自動識別當前執行環境的作業系統 (Windows/macOS/Linux) 並提供詳細版本資訊。
+*   **使用方式**：調用腳本以獲取精確的環境資訊，用於跨平台腳本的適配。
+
 ---
 
 ## 安裝目錄
