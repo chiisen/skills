@@ -96,6 +96,11 @@ Claude 執行 Skill 後會觀察結果（例如指令是否噴錯），如果失
 *   **核心功能**：修復 Zsh 歷史紀錄遺失、Oh My Zsh 外掛失效（Homebrew 兼容性問題）以及 `.zshrc` 配置錯誤。
 *   **使用方式**：當遇到終端機歷史紀錄功能異常、外掛報錯或配置問題時觸發。
 
+### 10. [Grafana Alert Troubleshooting](./grafana-alert-troubleshooting/SKILL.md)
+*   **角色場景**：Grafana 監控系統診斷專家。
+*   **核心功能**：針對 Grafana Alert 發送失敗（Contact Point 測試、Alert 狀態異常、Notification Policy 路由問題）進行系統化診斷，並提供 `notification_settings` 異常修復方案。
+*   **使用方式**：當遇到 Grafana Alert 觸發但未收到通知、Telegram 機器人無反應或通知週期異常時參考使用。
+
 ---
 
 ## 安裝目錄

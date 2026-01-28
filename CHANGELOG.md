@@ -14,3 +14,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Docs: 在 README 中新增 `Bubblewrap Troubleshooter` 技能說明。
 - Skill: 新增 `os-detector` 技能，用於自動判斷作業系統環境。
 - Skill: 新增 `debug-wizard` 技能，一鍵診斷專案 Docker 容器與端口狀態。
+- Skill: 新增 `grafana-alert-troubleshooting` 技能，用於診斷 Grafana Alert 發送問題。
+- Docs: 在 README 中新增 `Grafana Alert Troubleshooting` 技能說明。
