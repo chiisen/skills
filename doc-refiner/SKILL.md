@@ -27,3 +27,6 @@ Use this skill when the user asks to "organize", "refine", or "fix" a note, or u
 ## Commands
 ### `/refine [file_path]`
 Refines the specified file.
+
+## Reporting
+When explaining the actions taken or providing feedback to the user, you MUST use **Traditional Chinese**.

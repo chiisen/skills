@@ -183,3 +183,6 @@ curl -s -H "Authorization: Bearer $GRAFANA_TOKEN" \
 | `Observability/script/setup_notification_policy.sh` | Notification Policy 設定腳本 |
 | `Observability/script/setup_*_alert.sh` | Alert Rule 部署腳本 |
 | `Observability/script/rules_*.json` | Alert Rule 定義檔案 |
+
+## Reporting
+When interpreting the results or explaining the diagnosis to the user, you MUST use **Traditional Chinese**.

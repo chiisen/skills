@@ -55,51 +55,85 @@ Claude 執行 Skill 後會觀察結果（例如指令是否噴錯），如果失
 *   **角色場景**：專業的程式碼審核專家。
 *   **核心功能**：針對程式碼的變更範疇（Scope）、風格（Style）、安全性（Security）與測試覆蓋率（Tests）提供建設性回饋。
 *   **使用方式**：當請求中使用「feedback」、「review」或「check」等關鍵字時觸發。
+*   **輸出語言**：繁體中文
 
 ### 2. [Reviewer (極致嚴苛版)](./reviewer/README.md)
 *   **角色場景**：極度挑剔、冷酷且嚴厲的資深審查員。
 *   **核心功能**：以極高標準進行全方位的代碼審計（Audit），不容忍任何平庸代碼。
 *   **使用方式**：輸入專屬指令 `/review` 或在請求中表達需要嚴格審核時觸發。
+*   **輸出語言**：繁體中文
 
 ### 3. [Obsidian Markdown](./obsidian-markdown/README.md)
 *   **角色場景**：Obsidian 語法專家。
 *   **核心功能**：支援 Obsidian 特色的雙向連結（Wikilinks）、提示框（Callouts）、內容嵌入（Embeds）與 Properties 屬性管理。
 *   **使用方式**：在處理 `.md` 檔案或處理 Obsidian 特有功能時自動調用。
+*   **輸出語言**：繁體中文
 
 ### 4. [Obsidian Bases](./obsidian-bases/README.md)
 *   **角色場景**：Obsidian 資料庫視圖專家。
 *   **核心功能**：建立與管理 `.base` 檔案，支援表格、卡片等動態視圖、巢狀篩選器與強大的公式系統。
 *   **使用方式**：處理 `.base` 檔案或涉及資料庫視圖、篩選器、公式計算時觸發。
+*   **輸出語言**：繁體中文
 
 ### 5. [JSON Canvas](./json-canvas/README.md)
 *   **角色場景**：視覺化畫布與流程圖專家。
 *   **核心功能**：建立與編輯 `.canvas` 檔案，支援節點（文字、檔案、連結、群組）管理與連線邏輯。
 *   **使用方式**：處理 `.canvas` 檔案、製作心智圖、流程圖或需要視覺化呈現資訊時自動調用。
+*   **輸出語言**：繁體中文
 
 ### 6. [Bubblewrap Troubleshooter](./bubblewrap_troubleshooter/README.md)
 *   **角色場景**：Bubblewrap 建置障礙排除專家。
 *   **核心功能**：針對 Android 封裝工具執行 `bubblewrap build` 時常見的 JVM 記憶體不足與 JDK 路徑錯誤提供診斷與標準修復流程。
 *   **使用方式**：當執行 Bubblewrap 建置失敗，出現 Heap Space 或 JAVA_HOME 錯誤時參考使用。
+*   **輸出語言**：繁體中文
 
 ### 7. [OS Detector](./os-detector/SKILL.md)
 *   **角色場景**：跨平台環境判斷助手。
 *   **核心功能**：自動識別當前執行環境的作業系統 (Windows/macOS/Linux) 並提供詳細版本資訊。
 *   **使用方式**：調用腳本以獲取精確的環境資訊，用於跨平台腳本的適配。
+*   **輸出語言**：繁體中文
 
 ### 8. [Debug Wizard](./debug-wizard/SKILL.md)
 *   **角色場景**：開發環境診斷醫師。
 *   **核心功能**：針對專案技術堆疊（Grafana, App Server 等）自動執行健康檢查。包含 Docker 容器狀態巡檢與關鍵端口（80, 3000, 3100 等）連通性測試。
 *   **使用方式**：當回報「無法連線」、「服務沒跑起來」或需要除錯環境問題時自動觸發。
+*   **輸出語言**：繁體中文
 
 ### 9. [Zsh Fix](./zsh-fix/README.md)
 *   **角色場景**：Zsh 終端機環境管理專家。
 *   **核心功能**：修復 Zsh 歷史紀錄遺失、Oh My Zsh 外掛失效（Homebrew 兼容性問題）以及 `.zshrc` 配置錯誤。
 *   **使用方式**：當遇到終端機歷史紀錄功能異常、外掛報錯或配置問題時觸發。
+*   **輸出語言**：繁體中文
 
 ### 10. [Grafana Alert Troubleshooting](./grafana-alert-troubleshooting/SKILL.md)
 *   **角色場景**：Grafana 監控系統診斷專家。
 *   **核心功能**：針對 Grafana Alert 發送失敗（Contact Point 測試、Alert 狀態異常、Notification Policy 路由問題）進行系統化診斷，並提供 `notification_settings` 異常修復方案。
 *   **使用方式**：當遇到 Grafana Alert 觸發但未收到通知、Telegram 機器人無反應或通知週期異常時參考使用。
+*   **輸出語言**：繁體中文
+
+### 11. [Doc Refiner](./doc-refiner/SKILL.md)
+*   **角色場景**：Obsidian 筆記整理專家。
+*   **核心功能**：自動掃描並優化 Markdown 筆記格式，包含 Frontmatter 標準化、Callout 轉換與標題層級修復。
+*   **使用方式**：當需要「整理」、「優化」筆記或使用 `/refine` 指令時觸發。
+*   **輸出語言**：繁體中文
+
+### 12. [Log Sentinel](./log-sentinel/SKILL.md)
+*   **角色場景**：容器日誌快篩探針。
+*   **核心功能**：快速撈取並過濾 Docker 容器日誌，自動濾除雜訊（INFO/DEBUG），僅保留關鍵的 ERROR/WARN 與 Exception 堆疊資訊。
+*   **使用方式**：當回報「500 錯誤」、「檢查日誌」或使用 `/scan-logs` 指令時觸發。
+*   **輸出語言**：繁體中文
+
+### 13. [Manga Master](./manga-master/README.md)
+*   **角色場景**：少年漫畫生成大師。
+*   **核心功能**：將一句話故事自動轉化為 8 格少年 Jump 風格的全彩漫畫，自動處理分鏡佈局 (Layout) 與風格參數 (Style)。
+*   **使用方式**：當需要「畫漫畫」或提供故事描述時觸發。
+*   **輸出語言**：繁體中文
+
+### 14. [Semantic Git](./semantic-git/SKILL.md)
+*   **角色場景**：Git 提交訊息生成助理。
+*   **核心功能**：根據 `git diff` 內容自動生成符合 Conventional Commits 規範的提交訊息（Type, Scope, Subject, Body）。
+*   **使用方式**：當準備提交變更、詢問 commit message 或使用 `/commit-gen` 指令時觸發。
+*   **輸出語言**：繁體中文
 
 ---
 

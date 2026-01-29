@@ -46,6 +46,8 @@ skills/bubblewrap_troubleshooter/scripts/build.ps1 -AppDirectory android-app
 2. 若遇到 Keystore 錯誤，需刪除並重建：
    ```powershell
    Remove-Item android.keystore
-   # 確保已在 8088 埠啟動伺服器 (例如使用 python -m http.server 8088)
    bubblewrap init --manifest http://localhost:8088/manifest.json
    ```
+
+## Reporting
+When interpreting the results or explaining status to the user, you MUST use **Traditional Chinese**.

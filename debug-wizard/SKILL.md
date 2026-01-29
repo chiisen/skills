@@ -41,3 +41,6 @@ A Bash script equivalent to the PowerShell version, optimized for Unix-like envi
 ./scripts/diagnose.sh
 ```
 > **Agent Note**: This file is tracked with `+x` permission in Git. However, if you encounter `Permission denied` during execution, you MUST automatically run `chmod +x ./scripts/diagnose.sh` and retry without asking not ask the user.
+
+## Reporting
+When interpreting the results of the diagnosis scripts or explaining the status to the user, you MUST use **Traditional Chinese**.

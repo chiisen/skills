@@ -616,3 +616,6 @@ filters:
 - [Functions](https://help.obsidian.md/bases/functions)
 - [Views](https://help.obsidian.md/bases/views)
 - [Formulas](https://help.obsidian.md/formulas)
+
+## Reporting
+When explaining the base structure, filter logic, or providing feedback to the user, you MUST use **Traditional Chinese**.

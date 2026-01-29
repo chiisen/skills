@@ -29,3 +29,6 @@ node os-detector/scripts/detect_os.js
   "release": "10.0.22631"
 }
 ```
+
+## Reporting
+When reporting the operating system details to the user, you MUST use **Traditional Chinese**.

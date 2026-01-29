@@ -24,3 +24,6 @@ description: 診斷並修復 Zsh 終端機歷史紀錄遺失與 Oh My Zsh 外掛
 1. 檢查 `~/.zshrc` 中的 `plugins` 與 `source` 順序。
 2. 執行 `scripts/fix.sh` 進行目錄與檔案層級的修復。
 3. 提供使用者正確的 `.zshrc` 配置建議。
+
+## Reporting
+在解釋修復步驟或回報結果時，必須使用 **繁體中文**。

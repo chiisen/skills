@@ -640,3 +640,6 @@ This format is a 16-character lowercase hex string (64-bit random value).
 
 - [JSON Canvas Spec 1.0](https://jsoncanvas.org/spec/1.0/)
 - [JSON Canvas GitHub](https://github.com/obsidianmd/jsoncanvas)
+
+## Reporting
+When explaining the canvas structure, validation results, or providing feedback to the user, you MUST use **Traditional Chinese**.

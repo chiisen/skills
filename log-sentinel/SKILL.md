@@ -24,3 +24,6 @@ Use this skill when the user reports a runtime error, a "500 error", or asks to 
 ## Commands
 ### `/scan-logs [service_name]`
 Scans the logs of the specified service.
+
+## Reporting
+When interpreting the logs or reporting findings to the user, you MUST use **Traditional Chinese**.

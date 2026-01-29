@@ -618,3 +618,6 @@ Internal notes:
 - [Embed files](https://help.obsidian.md/embeds)
 - [Callouts](https://help.obsidian.md/callouts)
 - [Properties](https://help.obsidian.md/properties)
+
+## Reporting
+When explaining markdown syntax or providing feedback to the user, you MUST use **Traditional Chinese**.

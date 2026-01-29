@@ -22,3 +22,6 @@ tools: [image_generation] # 聲明需要使用生圖工具
 # Constraints
 - 禁止輸出 Prompt 文字。
 - 嚴禁詢問「你想要什麼風格？」，直接以 A1 B4 C2 D4 作為預設執行。
+
+## Reporting
+在解釋生成結果或與使用者溝通時，必須使用 **繁體中文**。

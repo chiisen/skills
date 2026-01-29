@@ -26,3 +26,6 @@ Use this skill when the user is ready to commit changes, asks for a commit messa
 ## Commands
 ### `/commit-gen`
 Generates a commit message for the currently staged changes.
+
+## Reporting
+When proposing the commit message or explaining the changes to the user, you MUST use **Traditional Chinese**.
