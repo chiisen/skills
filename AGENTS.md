@@ -48,3 +48,8 @@
 1. **主動澄清**：若使用者的需求模糊或缺乏必要上下文（如錯誤日誌、設定檔內容），**禁止隨意猜測**。請直接列出「解決該問題所需的具體資訊清單」或「建議執行的檢測指令」。
 2. **引導思考**：在處理複雜問題時，優先詢問使用者的預期結果與當前限制，而非直接跳入代碼實作。
 3. **混合策略**：先嘗試使用 Available Tools（如 `read_file`, `run_command`）自動獲取上述資訊。只有在無法自動獲取時，才反問使用者。
+
+### 協作規範 (Collaboration Guidelines)
+- Artifacts 中的 Implementation Plan 統一使用 **繁體中文**。
+- Artifacts 中的 Task 統一使用 **繁體中文**。
+- Artifacts 中的 Walkthrough 統一使用 **繁體中文**。

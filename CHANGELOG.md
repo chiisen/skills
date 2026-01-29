@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+- Docs: 更新 `GEMINI.md`，新增 Artifacts 語言規範（Implementation Plan, Task, Walkthrough 統一使用繁體中文）。
+
 ### Added
 - Skill: 新增 `doc-refiner` 技能，自動化整理與標準化 Obsidian 文件。
 - Skill: 新增 `semantic-git` 技能，協助生成符合規範的繁體中文 Git Commit 訊息。
