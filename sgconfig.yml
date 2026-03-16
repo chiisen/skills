@@ -1,0 +1,70 @@
+# ast-grep 設定檔
+# 此檔案定義了專案的程式碼掃描規則
+
+version: 1
+# 指定要掃描的語言
+language: php
+# 包含的檔案模式
+include:
+  - app/code/**/*.php
+  - bank-account-monitor/src/**/*.py
+# 排除的檔案模式
+exclude:
+  - app/code/database/migrations/*
+  - app/code/database/seeders/*
+  - bank-account-monitor/tests/*
+  - vendor/*
+
+# 自訂規則集
+rules:
+  # PHP 規則
+  - id: php-no-direct-db-factories
+    pattern: $MODEL::find($X)
+    message: 在 factory 中使用 find() 可能導致 N+1 查詢問題，建議使用 factory 建立或引用
+    severity: warning
+    language: php
+    # only show warning in specific contexts
+    files:
+      - "**/database/factories/**/*.php"
+
+  - id: php-use-constant-instead-of-string
+    pattern: "'$CONSTANT'"
+    message: 考慮使用常數代替字串字面量以提高可維護性
+    severity: info
+    language: php
+
+  # Python 規則
+  - id: python-use-type-hints
+    pattern: "def $FUNC($...$ARGS):"
+    message: 建議為函式參數和回傳值添加類型提示
+    severity: info
+    language: python
+    # 只在特定目錄啟用
+    files:
+      - "**/src/**/*.py"
+
+  - id: python-no-async-in-main
+    pattern: "async def $FUNC(...):"
+    message: 主模組中避免使用 async 函式，應放在專門的 async 模組中
+    severity: info
+    language: python
+
+# 覆蓋特定語系的設定
+overrides:
+  # PHP 專屬設定
+  - language: php
+    include:
+      - app/code/**/*.php
+  # Python 專屬設定
+  - language: python
+    include:
+      - bank-account-monitor/src/**/*.py
+
+# 結構化輸出設定
+output:
+  # 輸出格式: pretty, json, github, gitlab, github-annotations, sarif
+  format: pretty
+  # 顯示上下文行數
+  context: 3
+  # 顯示規則 ID
+  show-rule-id: true
