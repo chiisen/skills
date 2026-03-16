@@ -4,3 +4,6 @@
 
 cron.log
 
+# Environment variables
+.env
+

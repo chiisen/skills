@@ -1,0 +1,6 @@
+interface:
+  display_name: "Telegram 通知"
+  short_description: "傳送 Telegram 通知訊息"
+  default_prompt: "傳送 Telegram 通知"
+  icon: "https://cdn-icons-png.flaticon.com/512/2111/2111634.png"
+  color: "#0088cc"
