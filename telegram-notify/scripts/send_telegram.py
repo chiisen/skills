@@ -30,18 +30,18 @@ def get_env_config():
         dict: 包含 bot_token 和 chat_id 的字典
     """
     # 從 .env 檔案讀取（若存在）
-    # 支援兩種位置：
-    # 1. 腳本所在目錄的上層 (scripts/../.env) - 開發環境
-    # 2. Claude Skills 目錄 (～/.claude/skills/telegram-notify/.env) - 用戶環境
-    env_path_script = Path(__file__).resolve().parent.parent / ".env"
+    # 支援兩種位置，優先順序：
+    # 1. Claude Skills 目錄 (～/.claude/skills/telegram-notify/.env) - 用戶個人設定（優先）
+    # 2. 腳本所在目錄的上層 (scripts/../.env) - 開發環境
     env_path_claude = Path.home() / ".claude" / "skills" / "telegram-notify" / ".env"
+    env_path_script = Path(__file__).resolve().parent.parent / ".env"
     env_vars = {}
 
-    # 優先使用腳本所在目錄的 .env
-    if env_path_script.exists():
-        env_path = env_path_script
-    elif env_path_claude.exists():
+    # 優先使用 Claude Skills 的 .env（用戶個人設定）
+    if env_path_claude.exists():
         env_path = env_path_claude
+    elif env_path_script.exists():
+        env_path = env_path_script
     else:
         return {"bot_token": None, "chat_id": None}
 
@@ -167,10 +167,10 @@ def main():
     config = get_env_config()
 
     # 確認 .env 檔案是否存在（支援兩種位置）
-    env_path_script = Path(__file__).resolve().parent.parent / ".env"
     env_path_claude = Path.home() / ".claude" / "skills" / "telegram-notify" / ".env"
+    env_path_script = Path(__file__).resolve().parent.parent / ".env"
 
-    if not env_path_script.exists() and not env_path_claude.exists():
+    if not env_path_claude.exists() and not env_path_script.exists():
         print("=" * 60, file=sys.stderr)
         print("Error: .env 檔案不存在", file=sys.stderr)
         print("=" * 60, file=sys.stderr)
