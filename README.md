@@ -160,9 +160,84 @@ Claude 執行 Skill 後會觀察結果（例如指令是否噴錯），如果失
 
 ---
 
-## 安裝目錄
-```bash
-C:\Users\chiis\.opencode\
-C:\Users\chiis\.gemini\
-C:\Users\chiis\.amp\
+## 設定檔說明 (Configuration)
+
+### MCP 伺服器設定 (`/.claude/mcp.json`)
+
+此檔案為 **Claude Code 的 MCP 服務配置**，用於啟用 ast-grep LSP 服務。
+
 ```
+/.claude/
+└── mcp.json          # MCP 伺服器啟動配置
+└── sgconfig.yml      # ast-grep 專案掃描規則範本
+```
+
+**檔案內容範例：**
+```json
+{
+    "mcpServers": {
+        "grepai": {
+            "command": "grepai",
+            "args": ["mcp"]
+        },
+        "ast-grep": {
+            "command": "ast-grep",
+            "args": ["lsp"]
+        }
+    }
+}
+```
+
+**作用說明：**
+| 項目 | 說明 |
+|------|------|
+| `command` | 執行的指令（ast-grep） |
+| `args` | 傳入參數（`lsp` 代表以 Language Server Protocol 模式運行） |
+| 功能 | 讓 Claude Code 可以透過 LSP 協定與 ast-grep 互動 |
+
+---
+
+### ast-grep 專案設定 (`/.claude/sgconfig.yml`)
+
+此檔案為 **ast-grep 的專案級設定範本**，定義程式碼掃描規則，應放置於各專案根目錄。
+
+**放置位置：**
+- **使用者級（啟用服務）**：`~/.claude/mcp.json` 或 `~/.config/claude/mcp.json`
+- **專案級（掃描規則）**：`/.claude/sgconfig.yml` 或 `/ast-grep.yaml`
+
+**設定結構：**
+```yaml
+version: 1
+language: php                    # 指定掃描語言
+
+include:                          # 包含的檔案模式
+  - app/code/**/*.php
+  - bank-account-monitor/src/**/*.py
+
+exclude:                          # 排除的檔案模式
+  - app/code/database/migrations/*
+  - vendor/*
+
+rules:                            # 自訂掃描規則
+  - id: php-no-direct-db-factories
+    pattern: $MODEL::find($X)
+    message: 註解說明
+    severity: warning
+    language: php
+
+output:                           # 輸出格式設定
+  format: pretty
+  context: 3
+  show-rule-id: true
+```
+
+**設定要點：**
+1. **語言指定**：可針對不同語言（php/python/javascript...）定義不同規則
+2. **路徑控制**：使用 `include`/`exclude` 控制掃描範圍
+3. **規則定義**：透過 `pattern`（.Rule 結構）定義程式碼模式匹配
+4. **輸出格式**：支援 `pretty`、`json`、`github`、`gitlab`、`sarif` 等格式
+
+---
+
+## 安裝目錄
+執行 git-pull-skills.ps1 或 git-pull-skills.sh 依據作業系統環境選擇。

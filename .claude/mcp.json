@@ -1,0 +1,14 @@
+{
+    "mcpServers": {
+        "grepai": {
+            "command": "grepai",
+            "args": [
+                "mcp"
+            ]
+        },
+        "ast-grep": {
+            "command": "ast-grep",
+            "args": ["lsp"]
+        }
+    }
+}
