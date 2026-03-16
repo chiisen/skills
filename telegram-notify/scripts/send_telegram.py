@@ -30,8 +30,20 @@ def get_env_config():
         dict: 包含 bot_token 和 chat_id 的字典
     """
     # 從 .env 檔案讀取（若存在）
-    env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+    # 支援兩種位置：
+    # 1. 腳本所在目錄的上層 (scripts/../.env) - 開發環境
+    # 2. Claude Skills 目錄 (～/.claude/skills/telegram-notify/.env) - 用戶環境
+    env_path_script = Path(__file__).resolve().parent.parent / ".env"
+    env_path_claude = Path.home() / ".claude" / "skills" / "telegram-notify" / ".env"
     env_vars = {}
+
+    # 優先使用腳本所在目錄的 .env
+    if env_path_script.exists():
+        env_path = env_path_script
+    elif env_path_claude.exists():
+        env_path = env_path_claude
+    else:
+        return {"bot_token": None, "chat_id": None}
 
     if env_path.exists():
         with open(env_path, "r", encoding="utf-8") as f:
@@ -154,9 +166,11 @@ def main():
     # 取得設定
     config = get_env_config()
 
-    # 確認 .env 檔案是否存在
-    env_path = Path(__file__).resolve().parent.parent / ".env"
-    if not env_path.exists():
+    # 確認 .env 檔案是否存在（支援兩種位置）
+    env_path_script = Path(__file__).resolve().parent.parent / ".env"
+    env_path_claude = Path.home() / ".claude" / "skills" / "telegram-notify" / ".env"
+
+    if not env_path_script.exists() and not env_path_claude.exists():
         print("=" * 60, file=sys.stderr)
         print("Error: .env 檔案不存在", file=sys.stderr)
         print("=" * 60, file=sys.stderr)
@@ -164,15 +178,19 @@ def main():
         print("請先設定 Telegram Bot 訊息發送功能：", file=sys.stderr)
         print("", file=sys.stderr)
         print("1. 複製範本檔案：", file=sys.stderr)
-        print(f"   cp {env_path.name}.example {env_path.name}", file=sys.stderr)
+        if env_path_script.exists() or Path.cwd().name == "telegram-notify":
+            print(f"   cp .env.example .env", file=sys.stderr)
+        else:
+            print(f"   cd /path/to/telegram-notify", file=sys.stderr)
+            print(f"   cp .env.example .env", file=sys.stderr)
         print("", file=sys.stderr)
         print("2. 編輯 .env 檔案，填入以下資訊：", file=sys.stderr)
         print("   - TELEGRAM_BOT_TOKEN：透過 @BotFather 取得", file=sys.stderr)
         print("   - TELEGRAM_CHAT_ID：與 Bot 交談後取得", file=sys.stderr)
         print("", file=sys.stderr)
-        print("3. 參考說明：", file=sys.stderr)
-        print(f"   - README.md：完整安裝與設定說明", file=sys.stderr)
-        print(f"   - {env_path.name}.example：環境變數範本", file=sys.stderr)
+        print("3. 支援位置：", file=sys.stderr)
+        print(f"   - 專案內：scripts/../../.env", file=sys.stderr)
+        print(f"   - Claude Skills：~/.claude/skills/telegram-notify/.env", file=sys.stderr)
         print("", file=sys.stderr)
         print("=" * 60, file=sys.stderr)
         sys.exit(1)
