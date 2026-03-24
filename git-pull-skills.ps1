@@ -12,6 +12,7 @@ $OpencodeSkillsDir = Join-Path $env:USERPROFILE ".opencode\skills"
 $ClaudeSkillsDir   = Join-Path $env:USERPROFILE ".claude\skills"
 $WindsurfSkillsDir = Join-Path $env:USERPROFILE ".codeium\windsurf\skills"
 $CursorSkillsDir   = Join-Path $env:USERPROFILE ".cursor\skills"
+$QwenSkillsDir     = Join-Path $env:USERPROFILE ".qwen\skills"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $LogFile   = Join-Path $ScriptDir "cron.log"
@@ -89,6 +90,7 @@ function Run-Update {
     $Results["Claude"]   = Update-Repo $ClaudeSkillsDir "Claude"
     $Results["Windsurf"] = Update-Repo $WindsurfSkillsDir "Windsurf"
     $Results["Cursor"]   = Update-Repo $CursorSkillsDir "Cursor"
+    $Results["Qwen"]     = Update-Repo $QwenSkillsDir "Qwen"
 
     Log-Message "📊 更新結果摘要："
     $AnyFailure = $false

@@ -10,6 +10,7 @@ OPENCODE_SKILLS_DIR="/Users/liao-eli/.opencode/skills"
 CLAUDE_SKILLS_DIR="/Users/liao-eli/.claude/skills"
 WINDSURF_SKILLS_DIR="/Users/liao-eli/.codeium/windsurf/skills"
 CURSOR_SKILLS_DIR="/Users/liao-eli/.cursor/skills"
+QWEN_SKILLS_DIR="/Users/liao-eli/.qwen/skills"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_FILE="$SCRIPT_DIR/cron.log"
 TEMP_LOG=$(mktemp)
@@ -58,6 +59,7 @@ run_update() {
     update_repo "$CLAUDE_SKILLS_DIR" "Claude" CLAUDE_RESULT
     update_repo "$WINDSURF_SKILLS_DIR" "Windsurf" WINDSURF_RESULT
     update_repo "$CURSOR_SKILLS_DIR" "Cursor" CURSOR_RESULT
+    update_repo "$QWEN_SKILLS_DIR" "Qwen" QWEN_RESULT
 
     log "📊 更新結果摘要："
     log "  GEMINI: $([ $GEMINI_RESULT -eq 0 ] && echo '成功' || echo '失敗')"
@@ -66,9 +68,10 @@ run_update() {
     log "  Claude: $([ $CLAUDE_RESULT -eq 0 ] && echo '成功' || echo '失敗')"
     log "  Windsurf: $([ $WINDSURF_RESULT -eq 0 ] && echo '成功' || echo '失敗')"
     log "  Cursor: $([ $CURSOR_RESULT -eq 0 ] && echo '成功' || echo '失敗')"
+    log "  Qwen: $([ $QWEN_RESULT -eq 0 ] && echo '成功' || echo '失敗')"
 
     # 如果有任何一個失敗，返回非零狀態碼
-    if [ $GEMINI_RESULT -ne 0 ] || [ $CODEX_RESULT -ne 0 ] || [ $OPENCODE_RESULT -ne 0 ] || [ $CLAUDE_RESULT -ne 0 ] || [ $WINDSURF_RESULT -ne 0 ] || [ $CURSOR_RESULT -ne 0 ]; then
+    if [ $GEMINI_RESULT -ne 0 ] || [ $CODEX_RESULT -ne 0 ] || [ $OPENCODE_RESULT -ne 0 ] || [ $CLAUDE_RESULT -ne 0 ] || [ $WINDSURF_RESULT -ne 0 ] || [ $CURSOR_RESULT -ne 0 ] || [ $QWEN_RESULT -ne 0 ]; then
         return 1
     else
         return 0
