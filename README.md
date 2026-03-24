@@ -241,3 +241,11 @@ output:                           # 輸出格式設定
 
 ## 安裝目錄
 執行 git-pull-skills.ps1 或 git-pull-skills.sh 依據作業系統環境選擇。
+
+## gstack 安裝說明
+
+```bash
+npm install
+# 安裝必要的瀏覽器驅動（用於 /browse 功能）
+npx playwright install chromium
+```
