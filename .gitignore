@@ -13,3 +13,6 @@ __pycache__/
 *$py.class
 *.so
 
+# Graphify
+graphify/.graphify_version
+
