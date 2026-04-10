@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Script: 更新 `git-pull-skills.sh` 以包含 `WINDSURF_SKILLS_DIR` 與 `CURSOR_SKILLS_DIR` 的處理。
 
 ### Added
+- Skill: 新增 `harness-engineering` 技能，模擬 OpenAI 的 AI 原生開發工作流，支援平行原型開發與評估驅動迭代。
+- Workflow: 新增 `harness-engineering` 工作流，說明如何在新專案中導入 OpenAI 風格的開發流程。
 - Script: 新增 `git-pull-skills.ps1`，為 `git-pull-skills.sh` 的 Windows PowerShell 版本，支援路徑自動轉換與日誌管理。
 - Skill: 新增 `ui-ux-pro-max` 家族系列技能，包含：
     - `ui-ux-pro-max`: 設計智慧核心與 App UI 規範。
