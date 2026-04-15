@@ -35,3 +35,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Skill: 新增 `debug-wizard` 技能，一鍵診斷專案 Docker 容器與端口狀態。
 - Skill: 新增 `grafana-alert-troubleshooting` 技能，用於診斷 Grafana Alert 發送問題。
 - Docs: 在 README 中新增 `Grafana Alert Troubleshooting` 技能說明。
+- Script: 新增 `check_skill_md.sh` 腳本，用於檢查各子目錄中是否有 SKILL.md 檔案，並顯示缺少檔案的目錄清單。
