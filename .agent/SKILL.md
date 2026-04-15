@@ -1,4 +1,5 @@
 ---
+name: agent-skills
 description: List and summarize all available skills in the project
 ---
 
