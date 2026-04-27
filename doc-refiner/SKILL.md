@@ -1,6 +1,6 @@
 ---
 name: doc-refiner
-description: Automates the process of refining and organizing Obsidian markdown notes into a standardized format.
+description: Refine and organize Obsidian markdown notes. Use to organize, refine, or fix notes, or for /refine command.
 ---
 
 # Document Refiner

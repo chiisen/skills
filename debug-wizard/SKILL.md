@@ -1,6 +1,6 @@
 ---
 name: debug-wizard
-description: A diagnostic tool for the project's observability stack (Grafana, Loki, Prometheus, etc.) and App Server.
+description: Diagnose observability stack (Grafana, Loki, Prometheus) and App Server. Use for debugging system or environment status.
 ---
 # Debug Wizard
 

@@ -1,10 +1,7 @@
 ---
 name: harness-engineering
 version: 1.0.0
-description: |
-  OpenAI 開發工作流 (Harnessing Engineering) — 專注於「AI 原生」工程文化。
-  包含 AI 代理協作、平行原型實作、DRI 責任制以及評估驅動的開發。
-  適用於需要快速迭代、高品質交付以及探索新技術特性的專案。
+description: AI-native workflow. Use for agent collab, parallel prototyping, DRI, and eval-driven dev in fast iterations.
 ---
 
 # Harness Engineering: OpenAI 的 AI 原生開發工作流

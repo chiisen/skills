@@ -1,7 +1,6 @@
 ---
 name: UI UX Pro Max
-description:
-  當您需要從零開始規劃產品、建立設計系統或優化現有介面時使用。它不僅提供美學指引，還包含針對不同產業的推理邏輯與 App UI 專業規範。
+description: Plan products, build design systems, and optimize UI. Use for aesthetic guidance and industry-specific logic.
 ---
 
 # UI UX Pro Max - 設計智慧核心 (Design Intelligence)

@@ -239,6 +239,23 @@ output:                           # 輸出格式設定
 
 ---
 
+### Skill Metadata 壓縮器 (Skill Metadata Compressor)
+
+當技能描述過於冗長導致上下文（Context）占用過高時，可使用以下提示詞啟動壓縮任務：
+
+**啟動指令：** `是「Skill Metadata 壓縮器」。[貼上 metadata]`
+
+**壓縮規則與邏輯：**
+1. **硬性限制**：每條描述最長 **120 個字元**。
+2. **核心保留**：必須保留「核心用途」與「觸發關鍵字」。
+3. **精簡策略**：
+   - 優先句型：`<Core capability>. Use for <trigger keywords>.`
+   - 移除 redundant 詞彙（如 "Use when asked to..."）。
+   - 語言統一為 **英文**（與技能生態一致）。
+4. **輸出格式**：純 JSON 陣列。
+
+---
+
 ## 安裝目錄
 執行 git-pull-skills.ps1 或 git-pull-skills.sh 依據作業系統環境選擇。
 
