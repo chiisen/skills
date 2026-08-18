@@ -43,6 +43,9 @@
 | **Node Exporter** | `v1.9.1` | `9100` | System Metrics |
 | **cAdvisor** | `v0.49.1` | `8080` | Container Metrics (Privileged) |
 
+### 通用原則 (General Principle)
+- 當問題涉及程式碼的作用或行為時，先追蹤完整執行流程，包含跨檔案依賴與框架機制，再根據程式碼證據回答。
+
 ### 互動準則 (Interaction Protocol)
 為了提升溝通效率，請遵循 **「逆向導引 (Reverse Prompting)」** 策略：
 1. **主動澄清**：若使用者的需求模糊或缺乏必要上下文（如錯誤日誌、設定檔內容），**禁止隨意猜測**。請直接列出「解決該問題所需的具體資訊清單」或「建議執行的檢測指令」。

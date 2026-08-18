@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Docs: 在 `AGENTS.md` 與 `GEMINI.md` 新增程式碼行為分析通用原則，要求先追蹤完整執行流程與跨檔案依賴，再依程式碼證據回答。
 - Skill: 壓縮 `harness-engineering`, `code-reviewer`, `debug-wizard`, `doc-refiner`, `gstack`, `ui-ux-pro-max` 的 `description` 以降低上下文占用。
 - Docs: 更新 `GEMINI.md`，新增 Artifacts 語言規範（Implementation Plan, Task, Walkthrough 統一使用繁體中文）。
 - Fixed: 修正 `clean_prometheus_series/SKILL.md` 的 YAML 語法錯誤（為 `description` 加上引號）。
