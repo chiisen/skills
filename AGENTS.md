@@ -44,7 +44,7 @@
 | **cAdvisor** | `v0.49.1` | `8080` | Container Metrics (Privileged) |
 
 ### 通用原則 (General Principle)
-- 當問題涉及程式碼的作用或行為時，先追蹤完整執行流程，包含跨檔案依賴與框架機制，再根據程式碼證據回答。
+- 判斷 Skill、腳本或設定的作用時，先查閱相關檔案與依賴；涉及跨檔案行為時，依可驗證內容回答，不憑猜測。
 
 ### 互動準則 (Interaction Protocol)
 為了提升溝通效率，請遵循 **「逆向導引 (Reverse Prompting)」** 策略：
