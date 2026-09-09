@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed: 解決 `git-pull-skills.sh` 執行時因 `Claude` 目錄存在未追蹤檔案 `graphify/SKILL.md` 導致的更新失敗問題。
 
 ### Added
+- Skill: 新增 `Humanizer-zh-TW` 技能，提供繁體中文 AI 寫作自然化工具與文字浮水印清理流程。
 - Docs: 在 README 中新增「Skill Metadata 壓縮器」工具說明與提示詞範本。
 - Skill: 新增 `harness-engineering` 技能，模擬 OpenAI 的 AI 原生開發工作流，支援平行原型開發與評估驅動迭代。
 - Skill: 新增 `graphify` 技能，支援將代碼、文檔、論文或圖片轉換為可導航的知識圖譜，具備社群偵測與 RAG 支援。
