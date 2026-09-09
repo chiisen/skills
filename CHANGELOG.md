@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Removed
+- Skill: 移除 `code-reviewer` 技能（已與 `reviewer` 合併為單一技能）。
+
 ### Changed
 - Docs: 將程式碼行為分析原則調整為 Skill、腳本與設定的維護導向規範，要求依相關檔案與可驗證內容判斷作用。
 - Docs: 在 `AGENTS.md` 與 `GEMINI.md` 新增程式碼行為分析通用原則，要求先追蹤完整執行流程與跨檔案依賴，再依程式碼證據回答。
