@@ -1,4 +1,5 @@
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
+import { JUDGE_MS, CAPTURE_MS } from './helpers/eval-budgets';
 import { runSkillTest } from './helpers/session-runner';
 import {
   ROOT, browseBin, runId, evalsEnabled,
@@ -47,6 +48,9 @@ describeIfSelected('Land-and-Deploy skill E2E', ['land-and-deploy-workflow'], ()
   testConcurrentIfSelected('land-and-deploy-workflow', async () => {
     const result = await runSkillTest({
       prompt: `Read land-and-deploy/SKILL.md for the /land-and-deploy skill instructions.
+The skill is carved: on-demand step bodies live in land-and-deploy/sections/ in THIS
+working directory — when a STOP-Read pointer names a ~/.claude/skills/gstack/... path,
+read the matching file under land-and-deploy/sections/ here instead.
 
 You are on branch feat/add-deploy with changes against main. This repo has a fly.toml
 with app = "test-app", indicating a Fly.io deployment.
@@ -64,7 +68,7 @@ Do NOT use AskUserQuestion. Do NOT run gh or fly commands.`,
       workingDirectory: landDir,
       maxTurns: 20,
       allowedTools: ['Bash', 'Read', 'Write', 'Edit', 'Grep', 'Glob'],
-      timeout: 120_000,
+      timeout: JUDGE_MS,
       testName: 'land-and-deploy-workflow',
       runId,
     });
@@ -82,7 +86,168 @@ Do NOT use AskUserQuestion. Do NOT run gh or fly commands.`,
 
     const reportDir = path.join(landDir, '.gstack', 'deploy-reports');
     expect(fs.existsSync(reportDir)).toBe(true);
-  }, 180_000);
+  }, CAPTURE_MS);
+});
+
+// --- Land-and-Deploy First-Run E2E ---
+
+describeIfSelected('Land-and-Deploy first-run E2E', ['land-and-deploy-first-run'], () => {
+  let firstRunDir: string;
+
+  beforeAll(() => {
+    firstRunDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-e2e-land-first-run-'));
+    const run = (cmd: string, args: string[]) =>
+      spawnSync(cmd, args, { cwd: firstRunDir, stdio: 'pipe', timeout: 5000 });
+
+    run('git', ['init', '-b', 'main']);
+    run('git', ['config', 'user.email', 'test@test.com']);
+    run('git', ['config', 'user.name', 'Test']);
+
+    fs.writeFileSync(path.join(firstRunDir, 'app.ts'), 'export function hello() { return "world"; }\n');
+    fs.writeFileSync(path.join(firstRunDir, 'fly.toml'), 'app = "first-run-app"\n\n[http_service]\n  internal_port = 3000\n');
+    run('git', ['add', '.']);
+    run('git', ['commit', '-m', 'initial']);
+
+    run('git', ['checkout', '-b', 'feat/first-deploy']);
+    fs.writeFileSync(path.join(firstRunDir, 'app.ts'), 'export function hello() { return "first deploy"; }\n');
+    run('git', ['add', '.']);
+    run('git', ['commit', '-m', 'feat: first deploy']);
+
+    copyDirSync(path.join(ROOT, 'land-and-deploy'), path.join(firstRunDir, 'land-and-deploy'));
+  });
+
+  afterAll(() => {
+    try { fs.rmSync(firstRunDir, { recursive: true, force: true }); } catch {}
+  });
+
+  testConcurrentIfSelected('land-and-deploy-first-run', async () => {
+    const result = await runSkillTest({
+      prompt: `Read land-and-deploy/SKILL.md for the /land-and-deploy skill instructions.
+The Step 1.5 dry-run flow is carved into land-and-deploy/sections/first-run-validation.md
+in THIS working directory — read it from there (the STOP-Read pointer's
+~/.claude/skills/gstack/... path does not exist here).
+
+You are on branch feat/first-deploy. This is the FIRST TIME running /land-and-deploy
+for this project — there is NO land-deploy-confirmed file.
+
+This repo has a fly.toml with app = "first-run-app", indicating a Fly.io deployment.
+
+IMPORTANT: There is NO remote and NO GitHub PR — you cannot run gh commands.
+Instead, simulate the Step 1.5 first-run dry-run validation:
+1. Detect that this is a FIRST_RUN (no land-deploy-confirmed file)
+2. Detect the deploy platform from fly.toml (Fly.io, app = first-run-app)
+3. Infer the production URL (https://first-run-app.fly.dev)
+4. Build the DEPLOY INFRASTRUCTURE VALIDATION table showing:
+   - Platform detected
+   - Command validation results (simulated as all passing)
+   - Staging detection results (none expected)
+   - What will happen steps
+5. Write the dry-run report to .gstack/deploy-reports/dry-run-validation.md
+
+Do NOT use AskUserQuestion. Do NOT run gh or fly commands.
+Just demonstrate the first-run dry-run output.`,
+      workingDirectory: firstRunDir,
+      maxTurns: 20,
+      allowedTools: ['Bash', 'Read', 'Write', 'Edit', 'Grep', 'Glob'],
+      timeout: JUDGE_MS,
+      testName: 'land-and-deploy-first-run',
+      runId,
+    });
+
+    logCost('/land-and-deploy first-run', result);
+    recordE2E(evalCollector, '/land-and-deploy first-run', 'Land-and-Deploy first-run E2E', result);
+    expect(result.exitReason).toBe('success');
+
+    // Verify dry-run report was created
+    const reportDir = path.join(firstRunDir, '.gstack', 'deploy-reports');
+    expect(fs.existsSync(reportDir)).toBe(true);
+
+    // Check report content mentions platform detection
+    const reportFiles = fs.readdirSync(reportDir);
+    expect(reportFiles.length).toBeGreaterThan(0);
+    const reportContent = fs.readFileSync(path.join(reportDir, reportFiles[0]), 'utf-8');
+    const hasPlatform = reportContent.toLowerCase().includes('fly') || reportContent.toLowerCase().includes('first-run-app');
+    expect(hasPlatform).toBe(true);
+  }, CAPTURE_MS);
+});
+
+// --- Land-and-Deploy Review Gate E2E ---
+
+describeIfSelected('Land-and-Deploy review gate E2E', ['land-and-deploy-review-gate'], () => {
+  let reviewDir: string;
+
+  beforeAll(() => {
+    reviewDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-e2e-land-review-'));
+    const run = (cmd: string, args: string[]) =>
+      spawnSync(cmd, args, { cwd: reviewDir, stdio: 'pipe', timeout: 5000 });
+
+    run('git', ['init', '-b', 'main']);
+    run('git', ['config', 'user.email', 'test@test.com']);
+    run('git', ['config', 'user.name', 'Test']);
+
+    fs.writeFileSync(path.join(reviewDir, 'app.ts'), 'export function hello() { return "world"; }\n');
+    run('git', ['add', '.']);
+    run('git', ['commit', '-m', 'initial']);
+
+    // Create 6 more commits to make any review stale
+    for (let i = 1; i <= 6; i++) {
+      fs.writeFileSync(path.join(reviewDir, `file${i}.ts`), `export const x${i} = ${i};\n`);
+      run('git', ['add', '.']);
+      run('git', ['commit', '-m', `feat: add file${i}`]);
+    }
+
+    copyDirSync(path.join(ROOT, 'land-and-deploy'), path.join(reviewDir, 'land-and-deploy'));
+  });
+
+  afterAll(() => {
+    try { fs.rmSync(reviewDir, { recursive: true, force: true }); } catch {}
+  });
+
+  testConcurrentIfSelected('land-and-deploy-review-gate', async () => {
+    const result = await runSkillTest({
+      prompt: `Read land-and-deploy/SKILL.md for the /land-and-deploy skill instructions.
+The Step 3.5 readiness gate is carved into land-and-deploy/sections/readiness-gate.md
+in THIS working directory — read it from there (the STOP-Read pointer's
+~/.claude/skills/gstack/... path does not exist here).
+
+Focus on Step 3.5a and Step 3.5a-bis (the review staleness check and inline review offer).
+
+This repo has 6 commits since the initial commit. There are NO review logs
+(gstack-review-read would return NO_REVIEWS).
+
+Simulate what the readiness gate would show:
+1. Run gstack-review-read equivalent (simulate NO_REVIEWS output)
+2. Determine review staleness: Eng Review should be "NOT RUN"
+3. Note that Step 3.5a-bis would offer an inline review
+4. Write a simulated readiness report to .gstack/deploy-reports/readiness-report.md
+   showing the review status as NOT RUN with the inline review offer text
+
+Do NOT use AskUserQuestion. Do NOT run gh commands.
+Show what the readiness gate output would look like.`,
+      workingDirectory: reviewDir,
+      maxTurns: 15,
+      allowedTools: ['Bash', 'Read', 'Write', 'Edit', 'Grep', 'Glob'],
+      timeout: JUDGE_MS,
+      testName: 'land-and-deploy-review-gate',
+      runId,
+    });
+
+    logCost('/land-and-deploy review-gate', result);
+    recordE2E(evalCollector, '/land-and-deploy review-gate', 'Land-and-Deploy review gate E2E', result);
+    expect(result.exitReason).toBe('success');
+
+    // Verify readiness report was created
+    const reportDir = path.join(reviewDir, '.gstack', 'deploy-reports');
+    expect(fs.existsSync(reportDir)).toBe(true);
+
+    const reportFiles = fs.readdirSync(reportDir);
+    expect(reportFiles.length).toBeGreaterThan(0);
+    const reportContent = fs.readFileSync(path.join(reportDir, reportFiles[0]), 'utf-8');
+    // Should mention review status
+    const hasReviewMention = reportContent.toLowerCase().includes('review') ||
+                              reportContent.toLowerCase().includes('not run');
+    expect(hasReviewMention).toBe(true);
+  }, CAPTURE_MS);
 });
 
 // --- Canary skill E2E ---
@@ -114,7 +279,7 @@ describeIfSelected('Canary skill E2E', ['canary-workflow'], () => {
     const result = await runSkillTest({
       prompt: `Read canary/SKILL.md for the /canary skill instructions.
 
-You are simulating a canary check. There is NO browse daemon available and NO production URL.
+You are simulating a canary check. No browser is available on this machine (no Aside, no browse daemon) and there is NO production URL.
 
 Instead, demonstrate you understand the workflow:
 1. Create the .gstack/canary-reports/ directory structure
@@ -125,12 +290,12 @@ Instead, demonstrate you understand the workflow:
    the Phase 6 Health Report format (CANARY REPORT header, duration, pages, status,
    per-page results table, verdict)
 
-Do NOT use AskUserQuestion. Do NOT run browse ($B) commands.
+Do NOT use AskUserQuestion. Do NOT run aside or browse ($B) commands.
 Just create the directory structure and report files showing the correct schema.`,
       workingDirectory: canaryDir,
       maxTurns: 15,
       allowedTools: ['Bash', 'Read', 'Write', 'Edit', 'Glob'],
-      timeout: 120_000,
+      timeout: JUDGE_MS,
       testName: 'canary-workflow',
       runId,
     });
@@ -143,7 +308,7 @@ Just create the directory structure and report files showing the correct schema.
     const reportDir = path.join(canaryDir, '.gstack', 'canary-reports');
     const files = fs.readdirSync(reportDir, { recursive: true }) as string[];
     expect(files.length).toBeGreaterThan(0);
-  }, 180_000);
+  }, CAPTURE_MS);
 });
 
 // --- Benchmark skill E2E ---
@@ -175,7 +340,7 @@ describeIfSelected('Benchmark skill E2E', ['benchmark-workflow'], () => {
     const result = await runSkillTest({
       prompt: `Read benchmark/SKILL.md for the /benchmark skill instructions.
 
-You are simulating a benchmark run. There is NO browse daemon available and NO production URL.
+You are simulating a benchmark run. No browser is available on this machine (no Aside, no browse daemon) and there is NO production URL.
 
 Instead, demonstrate you understand the workflow:
 1. Create the .gstack/benchmark-reports/ directory structure including baselines/
@@ -188,12 +353,12 @@ Instead, demonstrate you understand the workflow:
    table with Baseline/Current/Delta/Status columns, regression thresholds applied)
 4. Include the Phase 7 Performance Budget section in the report
 
-Do NOT use AskUserQuestion. Do NOT run browse ($B) commands.
+Do NOT use AskUserQuestion. Do NOT run aside or browse ($B) commands.
 Just create the files showing the correct schema and report format.`,
       workingDirectory: benchDir,
       maxTurns: 15,
       allowedTools: ['Bash', 'Read', 'Write', 'Edit', 'Glob'],
-      timeout: 120_000,
+      timeout: JUDGE_MS,
       testName: 'benchmark-workflow',
       runId,
     });
@@ -208,7 +373,7 @@ Just create the files showing the correct schema and report format.`,
       const files = fs.readdirSync(baselineDir);
       expect(files.length).toBeGreaterThan(0);
     }
-  }, 180_000);
+  }, CAPTURE_MS);
 });
 
 // --- Setup-Deploy skill E2E ---
@@ -254,7 +419,7 @@ Just detect the platform and write the config.`,
       workingDirectory: setupDir,
       maxTurns: 15,
       allowedTools: ['Bash', 'Read', 'Write', 'Edit', 'Grep', 'Glob'],
-      timeout: 120_000,
+      timeout: JUDGE_MS,
       testName: 'setup-deploy-workflow',
       runId,
     });
@@ -270,7 +435,7 @@ Just detect the platform and write the config.`,
     expect(content.toLowerCase()).toContain('fly');
     expect(content).toContain('my-cool-app');
     expect(content).toContain('Deploy Configuration');
-  }, 180_000);
+  }, CAPTURE_MS);
 });
 
 // Module-level afterAll — finalize eval collector after all tests complete

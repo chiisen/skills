@@ -1,24 +1,36 @@
 ---
 name: land-and-deploy
+preamble-tier: 4
 version: 1.0.0
 description: |
   Land and deploy workflow. Merges the PR, waits for CI and deploy,
   verifies production health via canary checks. Takes over after /ship
   creates the PR. Use when: "merge", "land", "deploy", "merge and verify",
-  "land it", "ship it to production".
+  "land it", "ship it to production". (gstack)
 allowed-tools:
   - Bash
   - Read
   - Write
   - Glob
   - AskUserQuestion
+sensitive: true
+triggers:
+  - merge and deploy
+  - land the pr
+  - ship to production
 ---
 
 {{PREAMBLE}}
 
-{{BROWSE_SETUP}}
+{{THIRD_PARTY_ACTIONS}}
+
+{{ASIDE_SETUP}}
+
+{{BROWSE_FALLBACK}}
 
 {{BASE_BRANCH_DETECT}}
+
+**If the platform detected above is GitLab or unknown:** STOP with: "GitLab support for /land-and-deploy is not yet implemented. Run `/ship` to create the MR, then merge manually via the GitLab web UI." Do not proceed.
 
 # /land-and-deploy — Merge, Deploy, Verify
 
@@ -42,7 +54,8 @@ the ones listed below. The user said `/land-and-deploy` which means DO IT — bu
 readiness first.
 
 **Always stop for:**
-- **Pre-merge readiness gate (Step 3.5)** — this is the ONE confirmation before merge
+- **First-run dry-run validation (Step 1.5)** — shows deploy infrastructure and confirms setup
+- **Pre-merge readiness gate (Step 3.5)** — reviews, tests, docs check before merge
 - GitHub CLI not authenticated
 - No PR found for this branch
 - CI failures or merge conflicts
@@ -54,15 +67,33 @@ readiness first.
 - Choosing merge method (auto-detect from repo settings)
 - Timeout warnings (warn and continue gracefully)
 
+## Voice & Tone
+
+Every message to the user should make them feel like they have a senior release engineer
+sitting next to them. The tone is:
+- **Narrate what's happening now.** "Checking your CI status..." not just silence.
+- **Explain why before asking.** "Deploys are irreversible, so I check X before proceeding."
+- **Be specific, not generic.** "Your Fly.io app 'myapp' is healthy" not "deploy looks good."
+- **Acknowledge the stakes.** This is production. The user is trusting you with their users' experience.
+- **First run = teacher mode.** Walk them through everything. Explain what each check does and why.
+- **Subsequent runs = efficient mode.** Brief status updates, no re-explanations.
+- **Never be robotic.** "I ran 4 checks and found 1 issue" not "CHECKS: 4, ISSUES: 1."
+
+---
+
+{{SECTION_INDEX:land-and-deploy}}
+
 ---
 
 ## Step 1: Pre-flight
+
+Tell the user: "Starting deploy sequence. First, let me make sure everything is connected and find your PR."
 
 1. Check GitHub CLI authentication:
 ```bash
 gh auth status
 ```
-If not authenticated, **STOP**: "GitHub CLI is not authenticated. Run `gh auth login` first."
+If not authenticated, **STOP**: "I need GitHub CLI access to merge your PR. Run `gh auth login` to connect, then try `/land-and-deploy` again."
 
 2. Parse arguments. If the user specified `#NNN`, use that PR number. If a URL was provided, save it for canary verification in Step 7.
 
@@ -71,15 +102,53 @@ If not authenticated, **STOP**: "GitHub CLI is not authenticated. Run `gh auth l
 gh pr view --json number,state,title,url,mergeStateStatus,mergeable,baseRefName,headRefName
 ```
 
-4. Validate the PR state:
-   - If no PR exists: **STOP.** "No PR found for this branch. Run `/ship` first to create one."
-   - If `state` is `MERGED`: "PR is already merged. Nothing to do."
-   - If `state` is `CLOSED`: "PR is closed (not merged). Reopen it first."
+4. Tell the user what you found: "Found PR #NNN — '{title}' (branch → base)."
+
+5. Validate the PR state:
+   - If no PR exists: **STOP.** "No PR found for this branch. Run `/ship` first to create a PR, then come back here to land and deploy it."
+   - If `state` is `MERGED`: "This PR is already merged — nothing to deploy. If you need to verify the deploy, run `/canary <url>` instead."
+   - If `state` is `CLOSED`: "This PR was closed without merging. Reopen it on GitHub first, then try again."
    - If `state` is `OPEN`: continue.
 
 ---
 
+## Step 1.5: First-run dry-run validation
+
+Check whether this project has been through a successful `/land-and-deploy` before,
+and whether the deploy configuration has changed since then:
+
+```bash
+{{SLUG_EVAL}}
+if [ ! -f ~/.gstack/projects/$SLUG/land-deploy-confirmed ]; then
+  echo "FIRST_RUN"
+else
+  # Check if deploy config has changed since confirmation
+  SAVED_HASH=$(cat ~/.gstack/projects/$SLUG/land-deploy-confirmed 2>/dev/null)
+  CURRENT_HASH=$(sed -n '/## Deploy Configuration/,/^## /p' CLAUDE.md 2>/dev/null | shasum -a 256 | cut -d' ' -f1)
+  # Also hash workflow files that affect deploy behavior
+  WORKFLOW_HASH=$(find .github/workflows -maxdepth 1 \( -name '*deploy*' -o -name '*cd*' \) 2>/dev/null | xargs cat 2>/dev/null | shasum -a 256 | cut -d' ' -f1)
+  COMBINED_HASH="${CURRENT_HASH}-${WORKFLOW_HASH}"
+  if [ "$SAVED_HASH" != "$COMBINED_HASH" ] && [ -n "$SAVED_HASH" ]; then
+    echo "CONFIG_CHANGED"
+  else
+    echo "CONFIRMED"
+  fi
+fi
+```
+
+**If CONFIRMED:** Print "I've deployed this project before and know how it works. Moving straight to readiness checks." Proceed to Step 2 — do NOT read the dry-run section.
+
+**If FIRST_RUN or CONFIG_CHANGED:** the full dry-run flow (teacher-mode explanation, deploy infrastructure detection, command validation, staging detection, readiness preview, and the save-or-stop confirmation) is on-demand:
+
+{{SECTION:first-run-validation}}
+
+When the section's confirmation saves the config fingerprint (choice A), continue to Step 2. Choices B and C stop the run exactly as the section describes.
+
+---
+
 ## Step 2: Pre-merge checks
+
+Tell the user: "Checking CI status and merge readiness..."
 
 Check CI status and merge readiness:
 
@@ -88,15 +157,15 @@ gh pr checks --json name,state,status,conclusion
 ```
 
 Parse the output:
-1. If any required checks are **FAILING**: **STOP.** Show the failing checks.
-2. If required checks are **PENDING**: proceed to Step 3.
-3. If all checks pass (or no required checks): skip Step 3, go to Step 4.
+1. If any required checks are **FAILING**: **STOP.** "CI is failing on this PR. Here are the failing checks: {list}. Fix these before deploying — I won't merge code that hasn't passed CI."
+2. If required checks are **PENDING**: Tell the user "CI is still running. I'll wait for it to finish." Proceed to Step 3.
+3. If all checks pass (or no required checks): Tell the user "CI passed." Skip Step 3, go to Step 4.
 
 Also check for merge conflicts:
 ```bash
 gh pr view --json mergeable -q .mergeable
 ```
-If `CONFLICTING`: **STOP.** "PR has merge conflicts. Resolve them and push before landing."
+If `CONFLICTING`: **STOP.** "This PR has merge conflicts with the base branch. Resolve the conflicts and push, then run `/land-and-deploy` again."
 
 ---
 
@@ -110,249 +179,60 @@ gh pr checks --watch --fail-fast
 
 Record the CI wait time for the deploy report.
 
-If CI passes within the timeout: continue to Step 4.
-If CI fails: **STOP.** Show failures.
-If timeout (15 min): **STOP.** "CI has been running for 15 minutes. Investigate manually."
+If CI passes within the timeout: Tell the user "CI passed after {duration}. Moving to readiness checks." Continue to Step 4.
+If CI fails: **STOP.** "CI failed. Here's what broke: {failures}. This needs to pass before I can merge."
+If timeout (15 min): **STOP.** "CI has been running for over 15 minutes — that's unusual. Check the GitHub Actions tab to see if something is stuck."
 
 ---
 
-## Step 3.5: Pre-merge readiness gate
+## Step 3.4: VERSION drift detection (workspace-aware ship)
 
-**This is the critical safety check before an irreversible merge.** The merge cannot
-be undone without a revert commit. Gather ALL evidence, build a readiness report,
-and get explicit user confirmation before proceeding.
-
-Collect evidence for each check below. Track warnings (yellow) and blockers (red).
-
-### 3.5a: Review staleness check
+Before gathering readiness evidence, verify that the VERSION this PR claims is still the next free slot. A sibling workspace may have shipped and landed since `/ship` ran, leaving this PR's VERSION stale.
 
 ```bash
-~/.claude/skills/gstack/bin/gstack-review-read 2>/dev/null
+BRANCH_VERSION=$(git show HEAD:VERSION 2>/dev/null | tr -d '\r\n[:space:]' || echo "")
+BASE_BRANCH=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || echo main)
+BASE_VERSION=$(git show origin/$BASE_BRANCH:VERSION 2>/dev/null | tr -d '\r\n[:space:]' || echo "")
+
+# Imply bump level by comparing branch VERSION to base (crude but good enough for drift detection)
+# We don't need the exact original level — we just need "a level" that passes to the util.
+# If the minor digit advanced, call it minor; patch digit, patch; etc. If base > branch, skip (not ours to land).
+# For simplicity: use "patch" as a conservative default; util handles collision-past regardless of input level.
+QUEUE_JSON=$(bun run ~/.claude/skills/gstack/bin/gstack-next-version \
+  --base "$BASE_BRANCH" \
+  --bump patch \
+  --current-version "$BASE_VERSION" 2>/dev/null || echo '{"offline":true}')
+NEXT_SLOT=$(echo "$QUEUE_JSON" | jq -r '.version // empty')
+OFFLINE=$(echo "$QUEUE_JSON" | jq -r '.offline // false')
 ```
 
-Parse the output. For each review skill (plan-eng-review, plan-ceo-review,
-plan-design-review, design-review-lite, codex-review):
+Behavior:
 
-1. Find the most recent entry within the last 7 days.
-2. Extract its `commit` field.
-3. Compare against current HEAD: `git rev-list --count STORED_COMMIT..HEAD`
+1. If `OFFLINE=true` or the util fails: print `⚠ VERSION drift check unavailable (util offline) — proceeding with PR version v<BRANCH_VERSION>`. Continue to Step 3.5. CI's version-gate job is the backstop.
 
-**Staleness rules:**
-- 0 commits since review → CURRENT
-- 1-3 commits since review → RECENT (yellow if those commits touch code, not just docs)
-- 4+ commits since review → STALE (red — review may not reflect current code)
-- No review found → NOT RUN
+2. If `BRANCH_VERSION` is already `>=` than `NEXT_SLOT`: no drift (or our PR is ahead of the queue). Continue.
 
-**Critical check:** Look at what changed AFTER the last review. Run:
-```bash
-git log --oneline STORED_COMMIT..HEAD
-```
-If any commits after the review contain words like "fix", "refactor", "rewrite",
-"overhaul", or touch more than 5 files — flag as **STALE (significant changes
-since review)**. The review was done on different code than what's about to merge.
+3. If drift is detected (a PR landed ahead of us and `BRANCH_VERSION < NEXT_SLOT`): **STOP** and print exactly:
+   ```
+   ⚠ VERSION drift detected.
+     This PR claims:  v<BRANCH_VERSION>
+     Next free slot:  v<NEXT_SLOT>   (queue moved since last /ship)
 
-### 3.5b: Test results
+   Rerun /ship from the feature branch to reconcile. /ship's ALREADY_BUMPED
+   branch will detect the drift and rewrite VERSION + CHANGELOG header + PR title
+   atomically. Do NOT merge from here — the landed PR would overwrite the other
+   branch's CHANGELOG entry or land with a duplicate version header.
+   ```
 
-**Free tests — run them now:**
-
-Read CLAUDE.md to find the project's test command. If not specified, use `bun test`.
-Run the test command and capture the exit code and output.
-
-```bash
-bun test 2>&1 | tail -10
-```
-
-If tests fail: **BLOCKER.** Cannot merge with failing tests.
-
-**E2E tests — check recent results:**
-
-```bash
-ls -t ~/.gstack-dev/evals/*-e2e-*-$(date +%Y-%m-%d)*.json 2>/dev/null | head -20
-```
-
-For each eval file from today, parse pass/fail counts. Show:
-- Total tests, pass count, fail count
-- How long ago the run finished (from file timestamp)
-- Total cost
-- Names of any failing tests
-
-If no E2E results from today: **WARNING — no E2E tests run today.**
-If E2E results exist but have failures: **WARNING — N tests failed.** List them.
-
-**LLM judge evals — check recent results:**
-
-```bash
-ls -t ~/.gstack-dev/evals/*-llm-judge-*-$(date +%Y-%m-%d)*.json 2>/dev/null | head -5
-```
-
-If found, parse and show pass/fail. If not found, note "No LLM evals run today."
-
-### 3.5c: PR body accuracy check
-
-Read the current PR body:
-```bash
-gh pr view --json body -q .body
-```
-
-Read the current diff summary:
-```bash
-git log --oneline $(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || echo main)..HEAD | head -20
-```
-
-Compare the PR body against the actual commits. Check for:
-1. **Missing features** — commits that add significant functionality not mentioned in the PR
-2. **Stale descriptions** — PR body mentions things that were later changed or reverted
-3. **Wrong version** — PR title or body references a version that doesn't match VERSION file
-
-If the PR body looks stale or incomplete: **WARNING — PR body may not reflect current
-changes.** List what's missing or stale.
-
-### 3.5d: Document-release check
-
-Check if documentation was updated on this branch:
-
-```bash
-git log --oneline --all-match --grep="docs:" $(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || echo main)..HEAD | head -5
-```
-
-Also check if key doc files were modified:
-```bash
-git diff --name-only $(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || echo main)...HEAD -- README.md CHANGELOG.md ARCHITECTURE.md CONTRIBUTING.md CLAUDE.md VERSION
-```
-
-If CHANGELOG.md and VERSION were NOT modified on this branch and the diff includes
-new features (new files, new commands, new skills): **WARNING — /document-release
-likely not run. CHANGELOG and VERSION not updated despite new features.**
-
-If only docs changed (no code): skip this check.
-
-### 3.5e: Readiness report and confirmation
-
-Build the full readiness report:
-
-```
-╔══════════════════════════════════════════════════════════╗
-║              PRE-MERGE READINESS REPORT                  ║
-╠══════════════════════════════════════════════════════════╣
-║                                                          ║
-║  PR: #NNN — title                                        ║
-║  Branch: feature → main                                  ║
-║                                                          ║
-║  REVIEWS                                                 ║
-║  ├─ Eng Review:    CURRENT / STALE (N commits) / —       ║
-║  ├─ CEO Review:    CURRENT / — (optional)                ║
-║  ├─ Design Review: CURRENT / — (optional)                ║
-║  └─ Codex Review:  CURRENT / — (optional)                ║
-║                                                          ║
-║  TESTS                                                   ║
-║  ├─ Free tests:    PASS / FAIL (blocker)                 ║
-║  ├─ E2E tests:     52/52 pass (25 min ago) / NOT RUN     ║
-║  └─ LLM evals:     PASS / NOT RUN                        ║
-║                                                          ║
-║  DOCUMENTATION                                           ║
-║  ├─ CHANGELOG:     Updated / NOT UPDATED (warning)       ║
-║  ├─ VERSION:       0.9.8.0 / NOT BUMPED (warning)        ║
-║  └─ Doc release:   Run / NOT RUN (warning)               ║
-║                                                          ║
-║  PR BODY                                                 ║
-║  └─ Accuracy:      Current / STALE (warning)             ║
-║                                                          ║
-║  WARNINGS: N  |  BLOCKERS: N                             ║
-╚══════════════════════════════════════════════════════════╝
-```
-
-If there are BLOCKERS (failing free tests): list them and recommend B.
-If there are WARNINGS but no blockers: list each warning and recommend A if
-warnings are minor, or B if warnings are significant.
-If everything is green: recommend A.
-
-Use AskUserQuestion:
-
-- **Re-ground:** "About to merge PR #NNN (title) from branch X to Y. Here's the
-  readiness report." Show the report above.
-- List each warning and blocker explicitly.
-- **RECOMMENDATION:** Choose A if green. Choose B if there are significant warnings.
-  Choose C only if the user understands the risks.
-- A) Merge — readiness checks passed (Completeness: 10/10)
-- B) Don't merge yet — address the warnings first (Completeness: 10/10)
-- C) Merge anyway — I understand the risks (Completeness: 3/10)
-
-If the user chooses B: **STOP.** List exactly what needs to be done:
-- If reviews are stale: "Re-run /plan-eng-review (or /review) to review current code."
-- If E2E not run: "Run `bun run test:e2e` to verify."
-- If docs not updated: "Run /document-release to update documentation."
-- If PR body stale: "Update the PR body to reflect current changes."
-
-If the user chooses A or C: continue to Step 4.
+   Exit non-zero. Do NOT auto-bump from `/land-and-deploy` — rerunning `/ship` is the clean path (it already handles VERSION + package.json + CHANGELOG header + PR title atomically via Step 12 ALREADY_BUMPED detection).
 
 ---
 
-## Step 4: Merge the PR
-
-Record the start timestamp for timing data.
-
-Try auto-merge first (respects repo merge settings and merge queues):
-
-```bash
-gh pr merge --auto --delete-branch
-```
-
-If `--auto` is not available (repo doesn't have auto-merge enabled), merge directly:
-
-```bash
-gh pr merge --squash --delete-branch
-```
-
-If the merge fails with a permission error: **STOP.** "You don't have merge permissions on this repo. Ask a maintainer to merge."
-
-If merge queue is active, `gh pr merge --auto` will enqueue. Poll for the PR to actually merge:
-
-```bash
-gh pr view --json state -q .state
-```
-
-Poll every 30 seconds, up to 30 minutes. Show a progress message every 2 minutes: "Waiting for merge queue... (Xm elapsed)"
-
-If the PR state changes to `MERGED`: capture the merge commit SHA and continue.
-If the PR is removed from the queue (state goes back to `OPEN`): **STOP.** "PR was removed from the merge queue."
-If timeout (30 min): **STOP.** "Merge queue has been processing for 30 minutes. Check the queue manually."
-
-Record merge timestamp and duration.
+{{SECTION:readiness-gate}}
 
 ---
 
-## Step 5: Deploy strategy detection
-
-Determine what kind of project this is and how to verify the deploy.
-
-First, run the deploy configuration bootstrap to detect or read persisted deploy settings:
-
-{{DEPLOY_BOOTSTRAP}}
-
-Then run `gstack-diff-scope` to classify the changes:
-
-```bash
-eval $(~/.claude/skills/gstack/bin/gstack-diff-scope $(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || echo main) 2>/dev/null)
-echo "FRONTEND=$SCOPE_FRONTEND BACKEND=$SCOPE_BACKEND DOCS=$SCOPE_DOCS CONFIG=$SCOPE_CONFIG"
-```
-
-**Decision tree (evaluate in order):**
-
-1. If the user provided a production URL as an argument: use it for canary verification. Also check for deploy workflows.
-
-2. Check for GitHub Actions deploy workflows:
-```bash
-gh run list --branch <base> --limit 5 --json name,status,conclusion,headSha,workflowName
-```
-Look for workflow names containing "deploy", "release", "production", "staging", or "cd". If found: poll the deploy workflow in Step 6, then run canary.
-
-3. If SCOPE_DOCS is the only scope that's true (no frontend, no backend, no config): skip verification entirely. Output: "PR merged. Documentation-only change — no deploy verification needed." Go to Step 9.
-
-4. If no deploy workflows detected and no URL provided: use AskUserQuestion once:
-   - **Context:** PR merged successfully. No deploy workflow or production URL detected.
-   - **RECOMMENDATION:** Choose B if this is a library/CLI tool. Choose A if this is a web app.
-   - A) Provide a production URL to verify
-   - B) Skip verification — this project doesn't have a web deploy
+{{SECTION:merge-and-deploy}}
 
 ---
 
@@ -406,85 +286,92 @@ If CLAUDE.md has a custom deploy status command in the "Custom deploy hooks" sec
 
 ### Common: Timing and failure handling
 
-Record deploy start time. Show progress every 2 minutes: "Deploy in progress... (Xm elapsed)"
+Record deploy start time. Show progress every 2 minutes: "Deploy is still running... ({X}m so far). This is normal for most platforms."
 
-If deploy succeeds (`conclusion` is `success` or health check passes): record deploy duration, continue to Step 7.
+If deploy succeeds (`conclusion` is `success` or health check passes): Tell the user "Deploy finished successfully. Took {duration}. Now I'll verify the site is healthy." Record deploy duration, continue to Step 7.
 
 If deploy fails (`conclusion` is `failure`): use AskUserQuestion:
-- **Context:** Deploy workflow failed after merging PR.
+- **Re-ground:** "The deploy workflow failed after the merge. The code is merged but may not be live yet. Here's what I can do:"
 - **RECOMMENDATION:** Choose A to investigate before reverting.
-- A) Investigate the deploy logs
-- B) Create a revert commit on the base branch
-- C) Continue anyway — the deploy failure might be unrelated
+- A) Let me look at the deploy logs to figure out what went wrong
+- B) Revert the merge immediately — roll back to the previous version
+- C) Continue to health checks anyway — the deploy failure might be a flaky step, and the site might actually be fine
 
-If timeout (20 min): warn "Deploy has been running for 20 minutes" and ask whether to continue waiting or skip verification.
+If timeout (20 min): "The deploy has been running for 20 minutes, which is longer than most deploys take. The site might still be deploying, or something might be stuck." Ask whether to continue waiting or skip verification.
 
 ---
 
 ## Step 7: Canary verification (conditional depth)
+
+Tell the user: "Deploy is done. Now I'm going to check the live site to make sure everything looks good — loading the page, checking for errors, and measuring performance."
 
 Use the diff-scope classification from Step 5 to determine canary depth:
 
 | Diff Scope | Canary Depth |
 |------------|-------------|
 | SCOPE_DOCS only | Already skipped in Step 5 |
-| SCOPE_CONFIG only | Smoke: `$B goto` + verify 200 status |
+| SCOPE_CONFIG only | Smoke: the Aside script below; `responseStatus` in `NAV=` must be 200 |
 | SCOPE_BACKEND only | Console errors + perf check |
 | SCOPE_FRONTEND (any) | Full: console + perf + screenshot |
 | Mixed scopes | Full canary |
 
-**Full canary sequence:**
+**Full canary sequence** — one `aside repl` script does the whole check (console hook first, then load, then evidence):
 
 ```bash
-$B goto <url>
+aside repl '
+const HOOK = `(() => { window.__gstackErrs = window.__gstackErrs || []; const oe = console.error; console.error = (...a) => { window.__gstackErrs.push(a.map(String).join(" ")); oe.apply(console, a); }; window.addEventListener("error", e => window.__gstackErrs.push("uncaught: " + e.message)); window.addEventListener("unhandledrejection", e => window.__gstackErrs.push("unhandledrejection: " + (e.reason && e.reason.message || e.reason))); })()`;
+const pg = await openTab("about:blank");
+await pg._sendToTarget("Page.addScriptToEvaluateOnNewDocument", { source: HOOK });
+await pg.goto("<url>");
+console.log("URL=" + pg.url());
+console.log("CONSOLE_ERRORS=" + JSON.stringify(await pg.evaluate(() => window.__gstackErrs)));
+console.log("NAV=" + await pg.evaluate(() => JSON.stringify(performance.getEntriesByType("navigation")[0])));
+console.log("TEXT_START"); console.log((await pg.evaluate(() => document.body.innerText)).slice(0, 20000)); console.log("TEXT_END");
+await pg.screenshot({ path: "post-deploy.jpg", type: "jpeg", quality: 60, fullPage: true });
+const a = await annotatedScreenshot(pg);
+await fs.writeFile(path.join(pwd, "post-deploy-annotated.png"), Buffer.from(a.base64Image, "base64"));
+console.log("ASIDE_DIR=" + pwd);
+await closeTab(pg);
+console.log("GSTACK_STEP_OK");
+'
 ```
 
-Check that the page loaded successfully (200, not an error page).
+Then copy the evidence out of the printed session directory:
 
 ```bash
-$B console --errors
+mkdir -p .gstack/deploy-reports && cp "<ASIDE_DIR>/post-deploy.jpg" "<ASIDE_DIR>/post-deploy-annotated.png" .gstack/deploy-reports/
 ```
 
-Check for critical console errors: lines containing `Error`, `Uncaught`, `Failed to load`, `TypeError`, `ReferenceError`. Ignore warnings.
+Read the output line by line:
 
-```bash
-$B perf
-```
-
-Check that page load time is under 10 seconds.
-
-```bash
-$B text
-```
-
-Verify the page has content (not blank, not a generic error page).
-
-```bash
-$B snapshot -i -a -o ".gstack/deploy-reports/post-deploy.png"
-```
-
-Take an annotated screenshot as evidence.
+- `URL=` — the page loaded and stayed on the site (not a redirect to an error page). A line starting with `[error` or a missing `GSTACK_STEP_OK` means the load failed.
+- `CONSOLE_ERRORS=` — check for critical errors: entries containing `Error`, `Uncaught`, `Failed to load`, `TypeError`, `ReferenceError`. Ignore warnings.
+- `NAV=` — `responseStatus` is the HTTP status of the document (Chromium PerformanceNavigationTiming) — must be 200. `loadEventEnd` is the page load time. Check that it is under 10 seconds.
+- `TEXT_START` / `TEXT_END` — verify the page has real content (not blank, not a generic error page).
+- `post-deploy.jpg` and the annotated `post-deploy-annotated.png` are the evidence. Read the copied screenshot so the user sees it.
 
 **Health assessment:**
-- Page loads successfully with 200 status → PASS
+- Page loads successfully with 200 status (`responseStatus` in `NAV=`) → PASS
 - No critical console errors → PASS
 - Page has real content (not blank or error screen) → PASS
 - Loads in under 10 seconds → PASS
 
-If all pass: mark as HEALTHY, continue to Step 9.
+If all pass: Tell the user "Site is healthy. Page loaded in {X}s, no console errors, content looks good. Screenshot saved to {path}." Mark as HEALTHY, continue to Step 9.
 
 If any fail: show the evidence (screenshot path, console errors, perf numbers). Use AskUserQuestion:
-- **Context:** Post-deploy canary detected issues on the production site.
+- **Re-ground:** "I found some issues on the live site after the deploy. Here's what I see: {specific issues}. This might be temporary (caches clearing, CDN propagating) or it might be a real problem."
 - **RECOMMENDATION:** Choose based on severity — B for critical (site down), A for minor (console errors).
-- A) Expected (deploy in progress, cache clearing) — mark as healthy
-- B) Broken — create a revert commit
-- C) Investigate further (open the site, look at logs)
+- A) That's expected — the site is still warming up. Mark it as healthy.
+- B) That's broken — revert the merge and roll back to the previous version
+- C) Let me investigate more — open the site and look at logs before deciding
 
 ---
 
 ## Step 8: Revert (if needed)
 
 If the user chose to revert at any point:
+
+Tell the user: "Reverting the merge now. This will create a new commit that undoes all the changes from this PR. The previous version of your site will be restored once the revert deploys."
 
 ```bash
 git fetch origin <base>
@@ -493,11 +380,12 @@ git revert <merge-commit-sha> --no-edit
 git push origin <base>
 ```
 
-If the revert has conflicts: warn "Revert has conflicts — manual resolution needed. The merge commit SHA is `<sha>`. You can run `git revert <sha>` manually."
+If the revert has conflicts: "The revert has merge conflicts — this can happen if other changes landed on {base} after your merge. You'll need to resolve the conflicts manually. The merge commit SHA is `<sha>` — run `git revert <sha>` to try again."
 
-If the base branch has push protections: warn "Branch protections may prevent direct push — create a revert PR instead: `gh pr create --title 'revert: <original PR title>'`"
+If the base branch has push protections: "This repo has branch protections, so I can't push the revert directly. I'll create a revert PR instead — merge it to roll back."
+Then create a revert PR: `gh pr create --title 'revert: <original PR title>'`
 
-After a successful revert, note the revert commit SHA and continue to Step 9 with status REVERTED.
+After a successful revert: Tell the user "Revert pushed to {base}. The deploy should roll back automatically once CI passes. Keep an eye on the site to confirm." Note the revert commit SHA and continue to Step 9 with status REVERTED.
 
 ---
 
@@ -518,23 +406,32 @@ PR:           #<number> — <title>
 Branch:       <head-branch> → <base-branch>
 Merged:       <timestamp> (<merge method>)
 Merge SHA:    <sha>
+Merge path:   <auto-merge / direct / merge queue>
+First run:    <yes (dry-run validated) / no (previously confirmed)>
 
 Timing:
+  Dry-run:    <duration or "skipped (confirmed)">
   CI wait:    <duration>
   Queue:      <duration or "direct merge">
   Deploy:     <duration or "no workflow detected">
+  Staging:    <duration or "skipped">
   Canary:     <duration or "skipped">
   Total:      <end-to-end duration>
 
+Reviews:
+  Eng review: <CURRENT / STALE / NOT RUN>
+  Inline fix: <yes (N fixes) / no / skipped>
+
 CI:           <PASSED / SKIPPED>
-Deploy:       <PASSED / FAILED / NO WORKFLOW>
+Deploy:       <PASSED / FAILED / NO WORKFLOW / CI AUTO-DEPLOY>
+Staging:      <VERIFIED / SKIPPED / N/A>
 Verification: <HEALTHY / DEGRADED / SKIPPED / REVERTED>
   Scope:      <FRONTEND / BACKEND / CONFIG / DOCS / MIXED>
   Console:    <N errors or "clean">
   Load time:  <Xs>
   Screenshot: <path or "none">
 
-VERDICT: <DEPLOYED AND VERIFIED / DEPLOYED (UNVERIFIED) / REVERTED>
+VERDICT: <DEPLOYED AND VERIFIED / DEPLOYED (UNVERIFIED) / STAGING VERIFIED / REVERTED>
 ```
 
 Save report to `.gstack/deploy-reports/{date}-pr{number}-deploy.md`.
@@ -548,28 +445,48 @@ mkdir -p ~/.gstack/projects/$SLUG
 
 Write a JSONL entry with timing data:
 ```json
-{"skill":"land-and-deploy","timestamp":"<ISO>","status":"<SUCCESS/REVERTED>","pr":<number>,"merge_sha":"<sha>","deploy_status":"<HEALTHY/DEGRADED/SKIPPED>","ci_wait_s":<N>,"queue_s":<N>,"deploy_s":<N>,"canary_s":<N>,"total_s":<N>}
+{"skill":"land-and-deploy","timestamp":"<ISO>","status":"<SUCCESS/REVERTED>","pr":<number>,"merge_sha":"<sha>","merge_path":"<auto/direct/queue>","first_run":<true/false>,"deploy_status":"<HEALTHY/DEGRADED/SKIPPED>","staging_status":"<VERIFIED/SKIPPED>","review_status":"<CURRENT/STALE/NOT_RUN/INLINE_FIX>","ci_wait_s":<N>,"queue_s":<N>,"deploy_s":<N>,"staging_s":<N>,"canary_s":<N>,"total_s":<N>}
 ```
 
 ---
 
 ## Step 10: Suggest follow-ups
 
-After the deploy report, suggest relevant follow-ups:
+After the deploy report:
 
-- If a production URL was verified: "Run `/canary <url> --duration 10m` for extended monitoring."
-- If performance data was collected: "Run `/benchmark <url>` for a deep performance audit."
-- "Run `/document-release` to update project documentation."
+If verdict is DEPLOYED AND VERIFIED: Tell the user "Your changes are live and verified. Nice ship."
+
+If verdict is DEPLOYED (UNVERIFIED): Tell the user "Your changes are merged and should be deploying. I wasn't able to verify the site — check it manually when you get a chance."
+
+If verdict is REVERTED: Tell the user "The merge was reverted. Your changes are no longer on {base}. The PR branch is still available if you need to fix and re-ship."
+
+Then suggest relevant follow-ups:
+- If a production URL was verified: "Want extended monitoring? Run `/canary <url>` to watch the site for the next 10 minutes."
+- If performance data was collected: "Want a deeper performance analysis? Run `/benchmark <url>`."
+- "Need to update docs? Run `/document-release` to sync README, CHANGELOG, and other docs with what you just shipped."
+
+---
+
+## Section self-check (before you finish)
+
+You ran a carved skill. For your situation, list every section the Section index
+named as applying, and confirm you issued a Read for each one (a CONFIRMED Step 1.5
+correctly skips the dry-run section). If you executed the readiness gate, the merge,
+or deploy-strategy detection from memory without reading its section, you skipped
+the source of truth — STOP, Read it now, and redo that step.
 
 ---
 
 ## Important Rules
 
 - **Never force push.** Use `gh pr merge` which is safe.
-- **Never skip CI.** If checks are failing, stop.
-- **Auto-detect everything.** PR number, merge method, deploy strategy, project type. Only ask when information genuinely can't be inferred.
+- **Never skip CI.** If checks are failing, stop and explain why.
+- **Narrate the journey.** The user should always know: what just happened, what's happening now, and what's about to happen next. No silent gaps between steps.
+- **Auto-detect everything.** PR number, merge method, deploy strategy, project type, merge queues, staging environments. Only ask when information genuinely can't be inferred.
 - **Poll with backoff.** Don't hammer GitHub API. 30-second intervals for CI/deploy, with reasonable timeouts.
-- **Revert is always an option.** At every failure point, offer revert as an escape hatch.
+- **Revert is always an option.** At every failure point, offer revert as an escape hatch. Explain what reverting does in plain English.
 - **Single-pass verification, not continuous monitoring.** `/land-and-deploy` checks once. `/canary` does the extended monitoring loop.
 - **Clean up.** Delete the feature branch after merge (via `--delete-branch`).
-- **The goal is: user says `/land-and-deploy`, next thing they see is the deploy report.**
+- **First run = teacher mode.** Walk the user through everything. Explain what each check does and why it matters. Show them their infrastructure. Let them confirm before proceeding. Build trust through transparency.
+- **Subsequent runs = efficient mode.** Brief status updates, no re-explanations. The user already trusts the tool — just do the job and report results.
+- **The goal is: first-timers think "wow, this is thorough — I trust it." Repeat users think "that was fast — it just works."**
