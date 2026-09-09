@@ -16,3 +16,8 @@ __pycache__/
 # Graphify
 graphify/.graphify_version
 
+# gstack vendored — 上游基礎設施，skills cluster 不需要
+gstack/.github/
+gstack/.gitlab-ci.yml
+gstack/.osv-scanner.toml
+gstack/test/
