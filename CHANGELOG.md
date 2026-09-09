@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 - Skill: 移除 `code-reviewer` 技能（已與 `reviewer` 合併為單一技能）。
+- Skill: 移除 `grafana-provisioning-fix` 技能（功能已被 `grafana-provisioning-troubleshoot` 完整涵蓋，且其 `clean_provenance.sh` 已升級取代 `fix_provenance.sh`）。
 
 ### Changed
 - Docs: 將程式碼行為分析原則調整為 Skill、腳本與設定的維護導向規範，要求依相關檔案與可驗證內容判斷作用。
