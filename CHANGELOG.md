@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Removed
+- Skill: 移除 `reviewer` 技能（審查準則與流程已由 superpowers `requesting-code-review` 及 `gstack/review` 涵蓋）。
 - Skill: 移除 `code-reviewer` 技能（已與 `reviewer` 合併為單一技能）。
 - Skill: 移除 `grafana-provisioning-fix` 技能（功能已被 `grafana-provisioning-troubleshoot` 完整涵蓋，且其 `clean_provenance.sh` 已升級取代 `fix_provenance.sh`）。
 
