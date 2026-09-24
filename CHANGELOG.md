@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Docs: 更新 `GEMINI.md`，新增 Artifacts 語言規範（Implementation Plan, Task, Walkthrough 統一使用繁體中文）。
 - Fixed: 修正 `clean_prometheus_series/SKILL.md` 的 YAML 語法錯誤（為 `description` 加上引號）。
 - Script: 更新 `git-pull-skills.sh` 以包含 `WINDSURF_SKILLS_DIR` 與 `CURSOR_SKILLS_DIR` 的處理。
+- Script: 更新 `git-pull-skills.sh` 將寫死的使用者家目錄改為動態判定（支援 `$HOME`、環境變數與參數帶入），解除特定使用者名稱（`liao-eli`）之綁定。
+- Script: 優化 `git-pull-skills.sh` 的目錄容錯與自愈機制：改用 `git -C` 避免工作目錄污染；依據父目錄判斷工具是否安裝（上一層目錄不存在才放棄略過），若父目錄存在但 `skills` 目錄不存在則自動 `git clone` 建立倉庫。
 - Fixed: 解決 `git-pull-skills.sh` 執行時因 `Claude` 目錄存在未追蹤檔案 `graphify/SKILL.md` 導致的更新失敗問題。
 
 ### Added
