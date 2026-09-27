@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Docs: 新增 `SKILLS_INDEX.md`，按使用情境重新編排 27 個 skills，提供「問題 → skill」快速對映、完整清單與維護指引。
+- Script: 新增 `audit-skills.sh`，全方位審計腳本。檢查 frontmatter 必要欄位、description 長度（預設 ≤ 120 字元）、觸發詞段落存在性、N-gram 觸發詞重疊、與 `SKILLS_INDEX.md` 對照。支援 `--json` 模式（CI 整合）與自訂 `--max-desc`。
 
 ### Removed
 - Skill: 移除 `reviewer` 技能（審查準則與流程已由 superpowers `requesting-code-review` 及 `gstack/review` 涵蓋）。
