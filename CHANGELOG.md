@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- Docs: 新增 `SKILLS_INDEX.md`，按使用情境重新編排 27 個 skills，提供「問題 → skill」快速對映、完整清單與維護指引。
+
 ### Removed
 - Skill: 移除 `reviewer` 技能（審查準則與流程已由 superpowers `requesting-code-review` 及 `gstack/review` 涵蓋）。
 - Skill: 移除 `code-reviewer` 技能（已與 `reviewer` 合併為單一技能）。
