@@ -110,6 +110,14 @@
 
 ---
 
+## 📖 理解技術內容
+
+### 想看懂技術概念、程式流程或長篇輸出
+- **`zh-tw-tech-explainer`** — 以繁體中文先回答問題，再依內容選擇文字、例子、表格或 Mermaid，並保留來源與關鍵條件。
+  觸發詞：「解釋這段流程」「幫我看懂這份規格」「比較這些方案」「用圖說明元件關係」
+
+---
+
 ## ✍️ 內容創作
 
 ### 去除 AI 寫作痕跡
@@ -173,6 +181,7 @@
 | `uupm-design-system/` | Design System Pro | Token 三層架構 |
 | `uupm-graphics-design/` | Graphics Design Mastery | Logo / Icon / Banner |
 | `uupm-presentation-slides/` | Presentation Slides Elite | 精品簡報 |
+| `zh-tw-tech-explainer/` | zh-tw-tech-explainer | 繁體中文技術解說與呈現形式選擇 |
 | `zsh-fix/` | zsh-fix | Zsh 終端機修復 |
 
 ---

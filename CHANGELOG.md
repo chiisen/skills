@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- Skill: 新增 `zh-tw-tech-explainer`，以繁體中文解說技術內容，依理解需求選擇文字、例子、表格或 Mermaid，並保留來源與關鍵條件。
 - Docs: 新增 `SKILLS_INDEX.md`，按使用情境重新編排 27 個 skills，提供「問題 → skill」快速對映、完整清單與維護指引。
 - Script: 新增 `audit-skills.sh`，全方位審計腳本。檢查 frontmatter 必要欄位、description 長度（預設 ≤ 120 字元）、觸發詞段落存在性、N-gram 觸發詞重疊、與 `SKILLS_INDEX.md` 對照。支援 `--json` 模式（CI 整合）與自訂 `--max-desc`。
 
