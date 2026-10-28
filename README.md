@@ -152,6 +152,12 @@ Claude 執行 Skill 後會觀察結果（例如指令是否噴錯），如果失
 *   **使用方式**：當需要看懂技術內容、追蹤程式流程、閱讀長篇輸出或比較方案時使用。
 *   **輸出語言**：繁體中文
 
+### 19. [遠端與本地 MySQL 安全查詢](./remote-mysql-query/SKILL.md)
+*   **角色場景**：本地 Sail 與遠端測試站（如 test4）的 MySQL 安全查詢專家。
+*   **核心功能**：SSH Tunnel 動態連線轉發、埠位防衝突（避免誤連 3307 phpMyAdmin）與 Docker 內部 IP 漂移自動修復。
+*   **說明文件**：[實戰指南 (開發者閱讀)](./remote-mysql-query/README.md)
+*   **輸出語言**：繁體中文
+
 ---
 
 ## 設定檔說明 (Configuration)
