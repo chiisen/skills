@@ -55,7 +55,22 @@ MySQL 的客戶端設定檔格式要求很嚴格：
 
 ---
 
-## 🛠️ 準備工作：設定檔建立教學
+## 🛠️ 準備工作：安裝客戶端與設定檔建立教學
+
+### 0. 環境適用範圍與 `mysql-client` 檢查（macOS 專屬）
+本指南與對應的 AI Skill 專為 **macOS (`Darwin`)** 環境設計。若在 **Windows 或 WSL** 環境中觸發，或是新機器尚未安裝 `mysql-client` / 尚未建立 `~/.my-<target>.cnf` 設定檔，**AI Agent 會自動暫停執行並主動詢問您要改用哪種方式查詢**（不會擅自猜測或硬跑）。
+
+在 macOS 本機上，只需要安裝輕量級的 MySQL 客戶端工具（不需安裝完整 MySQL Server）：
+```bash
+# 檢查是否已安裝（支援 PATH、Apple Silicon 與 Intel Mac 路徑）
+MYSQL_BIN=$(command -v mysql || ls /opt/homebrew/opt/mysql-client/bin/mysql /usr/local/opt/mysql-client/bin/mysql 2>/dev/null | head -n 1)
+echo "MySQL Client 路徑: ${MYSQL_BIN:-未安裝}"
+
+# 若顯示未安裝，請透過 Homebrew 安裝：
+brew install mysql-client
+```
+
+---
 
 為了避免在命令列中暴露明文密碼，建議在個人家目錄（`$HOME`）下建立兩份設定檔：
 
@@ -90,7 +105,8 @@ database=paymentplatform
 本地容器已經將 3306 映射出來，直接執行即可查詢：
 
 ```bash
-/opt/homebrew/opt/mysql-client/bin/mysql --defaults-extra-file="$HOME/.my-test0.cnf" \
+MYSQL_BIN=$(command -v mysql || ls /opt/homebrew/opt/mysql-client/bin/mysql /usr/local/opt/mysql-client/bin/mysql 2>/dev/null | head -n 1)
+"$MYSQL_BIN" --defaults-extra-file="$HOME/.my-test0.cnf" \
   -e "SELECT u.id, u.account, o.secret_key FROM users AS u JOIN user_options AS o ON o.user_id = u.id WHERE u.account = 'merchant';"
 ```
 
@@ -125,7 +141,8 @@ nc -zv 127.0.0.1 3308
 
 #### 第四步：執行查詢！
 ```bash
-/opt/homebrew/opt/mysql-client/bin/mysql --defaults-extra-file="$HOME/.my-test4.cnf" --protocol=TCP \
+MYSQL_BIN=$(command -v mysql || ls /opt/homebrew/opt/mysql-client/bin/mysql /usr/local/opt/mysql-client/bin/mysql 2>/dev/null | head -n 1)
+"$MYSQL_BIN" --defaults-extra-file="$HOME/.my-test4.cnf" --protocol=TCP \
   -e "SELECT u.id, u.account, o.secret_key FROM users AS u JOIN user_options AS o ON o.user_id = u.id WHERE u.account = 'merchant';"
 ```
 

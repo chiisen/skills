@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Skill: 移除 `grafana-provisioning-fix` 技能（功能已被 `grafana-provisioning-troubleshoot` 完整涵蓋，且其 `clean_provenance.sh` 已升級取代 `fix_provenance.sh`）。
 
 ### Changed
+- Skill: 優化 `remote-mysql-query` 的跨裝置環境防護與資安邊界：新增 `Phase 0` 三合一前置檢查（確認是否為 `macOS Darwin`、`mysql-client` 動態路徑、以及 `~/.my-<target>.cnf` 是否存在）；若在 Windows/WSL 環境或缺少任一設定，強制 AI 立即暫停並詢問使用者替代方案，嚴禁擅自繞道或提取明文密碼。
 - Docs: 將程式碼行為分析原則調整為 Skill、腳本與設定的維護導向規範，要求依相關檔案與可驗證內容判斷作用。
 - Docs: 在 `AGENTS.md` 與 `GEMINI.md` 新增程式碼行為分析通用原則，要求先追蹤完整執行流程與跨檔案依賴，再依程式碼證據回答。
 - Skill: 壓縮 `harness-engineering`, `code-reviewer`, `debug-wizard`, `doc-refiner`, `gstack`, `ui-ux-pro-max` 的 `description` 以降低上下文占用。
