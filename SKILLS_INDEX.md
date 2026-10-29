@@ -4,7 +4,7 @@
 >
 > 每個 skill 的完整觸發條件與細節請參考各目錄下的 `SKILL.md`。
 
-**總計**：28 個 skills（含 `gstack/` router 1 個）
+**總計**：29 個 skills（含 `gstack/` router 1 個）
 
 ---
 
@@ -13,6 +13,10 @@
 ### 查詢本地 Sail 或遠端測試站 MySQL 資料庫
 - **`remote-mysql-query`** — 透過 SSH Tunnel、mysql-client 與 `.cnf` 安全查詢，防範 3307 連接埠衝突與 Docker 內部 IP 漂移。
   觸發詞：「查本地資料庫」「查遠端資料庫」「連線 test4」「ERROR 2013」「查詢 MySQL」
+
+### 查詢本地 Sail 或遠端測試站 Redis 快取 / Queue / Session
+- **`remote-redis-query`** — 透過 SSH Tunnel、redis-cli 與 `.env` 安全查詢，支援多 DB (`db0`/`db1`/`db2`)、Laravel 前綴檢索與 Redis Insight 避坑。
+  觸發詞：「查本地 Redis」「查遠端 Redis」「查快取」「Redis Insight 連不上」「查詢 Redis」
 
 ### 想看「現在服務還活著嗎？」
 - **`debug-wizard`** — 檢查 Docker、關鍵 port（80/3000/3100/9090/9100/8080）與容器狀態。
@@ -179,6 +183,7 @@
 | `obsidian-markdown/` | obsidian-markdown | Obsidian Markdown 語法 |
 | `os-detector/` | os-detector | 作業系統判斷 |
 | `remote-mysql-query/` | remote-mysql-query | 本地與遠端 MySQL 安全查詢 |
+| `remote-redis-query/` | remote-redis-query | 本地與遠端 Redis 安全查詢與多 DB 檢索 |
 | `semantic-git/` | semantic-git | Conventional Commits 生成 |
 | `telegram-notify/` | telegram-notify | Telegram 訊息發送 |
 | `ui-ux-pro-max/` | UI UX Pro Max | 設計系統總綱 |

@@ -84,16 +84,17 @@ echo "OS=${OS_NAME} | MYSQL_BIN=${MYSQL_BIN:-MISSING} | CNF=$([ -f "$CNF_FILE" ]
 
 ### Phase 1: Dynamic Container IP Discovery (Avoid IP Drift)
 Do not hardcode remote Docker container IPs (e.g., `172.25.0.6` may change to `172.25.0.4` upon container recreation).
-Execute remote inspection via SSH:
+Execute remote inspection via SSH using single-quoted regex extraction (safe inside `$(...)` command substitution without variable stripping):
 ```bash
-ssh <host_alias> "awk '{print \$1, \$2}' /proc/\$(pgrep -o mysqld)/net/fib_trie | grep -B 1 '32 host' | grep -v '127.0.0.1' | head -n 1 | awk '{print \$2}'"
+REMOTE_CONTAINER_IP=$(ssh <host_alias> 'grep -B 1 "/32 host LOCAL" /proc/$(pgrep -o mysqld)/net/fib_trie | grep -Eo "172\.[0-9]+\.[0-9]+\.[0-9]+" | head -n 1')
+echo "REMOTE_CONTAINER_IP=${REMOTE_CONTAINER_IP}"
 ```
-*Output: Extracted IPv4 address (e.g., `172.25.0.4`). Store as `$REMOTE_CONTAINER_IP`.*
+*Output: Extracted IPv4 address (e.g., `172.25.0.4`).*
 
 ### Phase 2: Tunnel Lifecycle Management
-Ensure no stale processes bind to `3308`, then spawn the background tunnel:
+Ensure no stale processes (including tunnels from a previously queried remote host) bind to `3308`, then spawn the background tunnel:
 ```bash
-pkill -f "3308.*<host_alias>" || true
+pkill -f "127.0.0.1:3308:" || true
 ssh -f -N -L 127.0.0.1:3308:${REMOTE_CONTAINER_IP}:3306 <host_alias>
 ```
 

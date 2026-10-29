@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- Skill: 新增 `remote-redis-query`，指引 AI 與開發者安全查詢本地 Sail (`6379`) 及遠端測試站 (`6380` SSH Tunnel) Redis，包含 `Phase 0` 跨環境檢查、禁 `KEYS *` 規範、Laravel 多 DB (`db0`/`db1`/`db2`) 與前綴檢索（`SKILL.md`），以及涵蓋 Redis Insight (`:5540` 填 `redis:6379`) 避坑指南之實戰手冊（`README.md`）。
 - Skill: 新增 `remote-mysql-query`，指引 AI 與開發者安全查詢本地 Sail 及遠端測試站 MySQL，包含實戰手冊（`README.md`）與防範 3307 連接埠衝突與 Docker IP 漂移之自癒規範（`SKILL.md`）。
 - Skill: 新增 `zh-tw-tech-explainer`，以繁體中文解說技術內容，依理解需求選擇文字、例子、表格或 Mermaid，並保留來源與關鍵條件。
 - Docs: 新增 `SKILLS_INDEX.md`，按使用情境重新編排 27 個 skills，提供「問題 → skill」快速對映、完整清單與維護指引。
@@ -18,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Skill: 移除 `grafana-provisioning-fix` 技能（功能已被 `grafana-provisioning-troubleshoot` 完整涵蓋，且其 `clean_provenance.sh` 已升級取代 `fix_provenance.sh`）。
 
 ### Changed
+- Skill: 優化 `remote-mysql-query` 的遠端容器 IP 探測指令（改用單引號搭配 `grep -Eo` 正則擷取），解決包在 `$(...)` 變數賦值時因雙引號吃掉 `$2` 導致印出 `host` 的問題。
 - Skill: 優化 `remote-mysql-query` 的跨裝置環境防護與資安邊界：新增 `Phase 0` 三合一前置檢查（確認是否為 `macOS Darwin`、`mysql-client` 動態路徑、以及 `~/.my-<target>.cnf` 是否存在）；若在 Windows/WSL 環境或缺少任一設定，強制 AI 立即暫停並詢問使用者替代方案，嚴禁擅自繞道或提取明文密碼。
 - Docs: 將程式碼行為分析原則調整為 Skill、腳本與設定的維護導向規範，要求依相關檔案與可驗證內容判斷作用。
 - Docs: 在 `AGENTS.md` 與 `GEMINI.md` 新增程式碼行為分析通用原則，要求先追蹤完整執行流程與跨檔案依賴，再依程式碼證據回答。

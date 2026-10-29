@@ -117,20 +117,21 @@ MYSQL_BIN=$(command -v mysql || ls /opt/homebrew/opt/mysql-client/bin/mysql /usr
 遠端站台因為防火牆安全考量，不會對外開放 3306，我們需要透過 **SSH Tunnel** 轉發。
 
 #### 第一步：確認遠端 MySQL 容器的內部 IP（防範 IP 漂移）
-在 Mac 終端機執行此行指令，它會自動抓出遠端 MySQL 容器當前的虛擬 IP：
+在 Mac 終端機執行此行指令，它會自動抓出遠端 MySQL 容器當前的虛擬 IP 並存入變數 `$REMOTE_MYSQL_IP`：
 ```bash
-ssh test4 "awk '{print \$1, \$2}' /proc/\$(pgrep -o mysqld)/net/fib_trie | grep -B 1 '32 host' | grep -v '127.0.0.1' | head -n 1 | awk '{print \$2}'"
+REMOTE_MYSQL_IP=$(ssh test4 'grep -B 1 "/32 host LOCAL" /proc/$(pgrep -o mysqld)/net/fib_trie | grep -Eo "172\.[0-9]+\.[0-9]+\.[0-9]+" | head -n 1')
+echo "遠端 MySQL 容器 IP: $REMOTE_MYSQL_IP"
 ```
 *(假設查詢出來的 IP 是 `172.25.0.4`)*
 
 #### 第二步：在本機建立 SSH 加密隧道
 使用本地未被佔用的 **`3308`** 埠進行映射（先清理舊行程）：
 ```bash
-# 1. 關閉既有的 3308 Tunnel（避免綁定衝突）
-pkill -f "3308.*test4" || true
+# 1. 關閉既有的 3308 Tunnel（避免殘留其他測試站如 test3/test4 的隧道）
+pkill -f "127.0.0.1:3308:" || true
 
-# 2. 啟動背景隧道（把本地 3308 連到遠端的 172.25.0.4:3306）
-ssh -f -N -L 127.0.0.1:3308:172.25.0.4:3306 test4
+# 2. 啟動背景隧道（把本地 3308 連到遠端的 ${REMOTE_MYSQL_IP}:3306）
+ssh -f -N -L 127.0.0.1:3308:${REMOTE_MYSQL_IP}:3306 test4
 ```
 
 #### 第三步：驗證隧道是否暢通
